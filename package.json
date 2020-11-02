@@ -1,0 +1,32 @@
+{
+  "name": "@homeeondemand/react-native-mapbox-navigation",
+  "title": "React Native Mapbox Navigation",
+  "version": "1.0.0",
+  "description": "Smart Mapbox turn-by-turn routing based on real-time traffic for React Native.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/homeeondemand/react-native-mapbox-navigation.git",
+    "baseUrl": "https://github.com/homeeondemand/react-native-mapbox-navigation.git"
+  },
+  "keywords": [
+    "react-native",
+    "mapbox",
+    "navigation"
+  ],
+  "license": "MIT",
+  "licenseFilename": "LICENSE",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/homeeondemand/react-native-mapbox-navigation/issues"
+  },
+  "homepage": "https://github.com/homeeondemand/react-native-mapbox-navigation#readme",
+  "peerDependencies": {
+    "react": "^16.8.1",
+    "react-native": ">=0.60.0-rc.0 <1.0.x"
+  },
+  "devDependencies": {}
+}
