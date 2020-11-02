@@ -38,7 +38,7 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
 
         // needed to make instructions list click handler work
         findViewById<View>(R.id.instructionListLayout).visibility = INVISIBLE
-        // hide the cancel button. TODO: make this configurable
+        // hide the cancel button.
         findViewById<View>(R.id.cancelBtn).visibility = INVISIBLE
     }
 
