@@ -83,7 +83,60 @@ For more information you can read the [docs provided by Mapbox](https://docs.map
 
 ## Usage
 
-TODO
+```jsx
+import * as React from 'react';
+import { StyleSheet, View } from 'react-native';
+import MapboxNavigation from 'react-native-mapbox-navigation';
+
+export const SomeComponent = () => {
+  return (
+    <View style={styles.flexIt}>
+      <MapboxNavigation
+        origin={[-97.760288, 30.273566]}
+        destination={[-97.918842, 30.494466]}
+        shouldSimulateRoute={true}
+        onProgressChange={(event) => {
+          const { latitude, longitude } = event.nativeEvent;
+        }}
+        onError={(event) => {
+          const { message } = event.nativeEvent;
+        }}
+        style={styles.flexIt}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  flexIt: {
+    flex: 1,
+  },
+});
+```
+
+### `MapboxNavigation` Props
+
+#### `origin` (**Required**)
+
+Array that contains the longitude and latitude for the starting point.
+`[$longitude, $latitude]`
+
+#### `destination` (**Required**)
+
+Array that contains the longitude and latitude for the destination point.
+`[$longitude, $latitude]`
+
+#### `shouldSimulateRoute`
+
+Boolean that controls route simulation. Set this as `true` to auto navigate which is useful for testing or demo purposes. Defaults to `false`.
+
+#### `onProgressChange`
+
+Function that is called frequently during route navigation. It receives `latitude` and `longitude` as parameters that represent the current location during navigation.
+
+#### `onError`
+
+Function that is called whenever an error occurs. It receives a `message` parameter that describes the error that occurred.
 
 ## Contributing
 
