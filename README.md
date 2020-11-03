@@ -2,7 +2,7 @@
 
 Smart Mapbox turn-by-turn routing based on real-time traffic for React Native. A navigation UI ready to drop into your application.
 
-## Installation Prequisite
+## Installation Requirements
 
 Before installing the SDK, you will need to gather the appropriate credentials. The SDK requires two pieces of sensitive information from your Mapbox account. If you don't have a Mapbox account: [sign up](https://account.mapbox.com/auth/signup/) and navigate to your [Account page](https://account.mapbox.com/). You'll need:
 
