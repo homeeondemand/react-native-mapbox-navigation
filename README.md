@@ -61,6 +61,10 @@ Now you are ready to install the cocoapod:
 cd ios && pod install
 ```
 
+If you are experiencing a _"multiple commands produce"_ build error in your Xcode project then you will need to add this entry below to the top of your ios podfile:
+
+`install! 'cocoapods', :disable_input_output_paths => true`
+
 For more information you can read the [docs provided by Mapbox](https://docs.mapbox.com/ios/navigation/overview/#configure-credentials).
 
 ### Android Specific Instructions
