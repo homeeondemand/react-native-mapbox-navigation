@@ -118,12 +118,12 @@ const styles = StyleSheet.create({
 
 #### `origin` (**Required**)
 
-Array that contains the longitude and latitude for the starting point.
+Array that contains the longitude and latitude for the starting point.<br>
 `[$longitude, $latitude]`
 
 #### `destination` (**Required**)
 
-Array that contains the longitude and latitude for the destination point.
+Array that contains the longitude and latitude for the destination point.<br>
 `[$longitude, $latitude]`
 
 #### `shouldSimulateRoute`
