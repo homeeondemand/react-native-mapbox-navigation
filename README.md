@@ -44,7 +44,6 @@ After you create the Swift file, you should be prompted to choose if you want to
 This file is usually named YourProject-Bridging-Header.h. Don’t change this name manually, because Xcode configures the project with this exact filename.
 
 </details>
-<br>
 
 Place your secret token in a `.netrc` file in your home directory that contains this:
 
