@@ -34,7 +34,7 @@ password <INSERT SECRET TOKEN>
 
 Place your public token in your project's `Info.plist` and and add a `MGLMapboxAccessToken` key whose value is your public access token.
 
-Now you are ready to run the install the cocoapod:
+Now you are ready to install the cocoapod:
 
 ```
 cd ios && pod install
