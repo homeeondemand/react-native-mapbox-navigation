@@ -9,11 +9,11 @@ Pod::Spec.new do |s|
   s.description  = <<-DESC
                   Smart Mapbox turn-by-turn routing based on real-time traffic for React Native.
                    DESC
-  s.homepage     = "https://github.com/emin93/react-native-mapbox-navigation"
-  s.license    = { :type => "Apache-2.0", :file => "LICENSE" }
-  s.authors      = { "Emin Khateeb" => "emin@emin.ch" }
+  s.homepage     = "https://github.com/homeeondemand/react-native-mapbox-navigation"
+  s.license    = { :type => "MIT", :file => "LICENSE" }
+  s.authors      = { "HOMEE" => "support@homee.com" }
   s.platforms    = { :ios => "10.0" }
-  s.source       = { :git => "https://github.com/emin93/react-native-mapbox-navigation.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/homeeondemand/react-native-mapbox-navigation.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,swift}"
   s.requires_arc = true
