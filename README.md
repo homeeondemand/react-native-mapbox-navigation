@@ -24,6 +24,28 @@ Read the iOS specific instructions below before running `pod install`.
 
 ### iOS Specific Instructions
 
+Make sure your react native project has an Objective-C bridging header for swift. If you don't have a bridging header you can follow these steps here below in the dropdown.
+
+<details>
+<summary>
+  Create an Objective-C bridging header
+</summary>
+
+1. From Xcode, go to: <br>
+   File → New → File…
+1. Select Swift File
+1. Name your file Dummy or whatever you want
+1. In the Group dropdown, make sure to select the group folder for your app, not the project itself.
+
+After you create the Swift file, you should be prompted to choose if you want to configure an Objective-C Bridging Header. Select “Create Bridging Header”.
+
+![bridging header](img/bridging-header.png)
+
+This file is usually named YourProject-Bridging-Header.h. Don’t change this name manually, because Xcode configures the project with this exact filename.
+
+</details>
+<br>
+
 Place your secret token in a `.netrc` file in your home directory that contains this:
 
 ```
