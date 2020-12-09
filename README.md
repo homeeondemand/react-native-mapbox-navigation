@@ -111,7 +111,7 @@ For more information you can read the [docs provided by Mapbox](https://docs.map
 ```jsx
 import * as React from 'react';
 import { StyleSheet, View } from 'react-native';
-import MapboxNavigation from 'react-native-mapbox-navigation';
+import MapboxNavigation from '@homee/react-native-mapbox-navigation';
 
 export const SomeComponent = () => {
   return (
