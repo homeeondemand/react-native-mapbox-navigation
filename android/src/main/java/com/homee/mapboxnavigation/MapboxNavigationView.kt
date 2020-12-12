@@ -194,6 +194,6 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     }
 
     fun onDropViewInstance() {
-        this.mapboxNavigation.onDestroy();
+        this.mapboxNavigation.onDestroy()
     }
 }

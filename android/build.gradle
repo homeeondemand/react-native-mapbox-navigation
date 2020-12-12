@@ -93,8 +93,8 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
-    implementation 'com.mapbox.navigation:core:1.1.2'
-    implementation 'com.mapbox.navigation:ui:1.1.2'
+    implementation 'com.mapbox.navigation:core:1.2.1'
+    implementation 'com.mapbox.navigation:ui:1.2.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
