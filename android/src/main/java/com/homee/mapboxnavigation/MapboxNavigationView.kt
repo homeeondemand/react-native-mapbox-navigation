@@ -27,7 +27,6 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     private var origin: Point? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
-    private var isNavigating = false
     private lateinit var navigationMapboxMap: NavigationMapboxMap
     private lateinit var mapboxNavigation: MapboxNavigation
 
@@ -76,7 +75,7 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
                 return
             }
 
-            if (isRunning || ::navigationMapboxMap.isInitialized) {
+            if (::navigationMapboxMap.isInitialized) {
                 return
             }
 
@@ -136,7 +135,6 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
         optionsBuilder.shouldSimulateRoute(this.shouldSimulateRoute)
         optionsBuilder.waynameChipEnabled(true)
         this.startNavigation(optionsBuilder.build())
-        this.isNavigating = true
     }
 
     private val locationObserver = object : LocationObserver {
@@ -196,8 +194,6 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     }
 
     fun onDropViewInstance() {
-        if (isNavigating) {
-            stopNavigation()
-        }
+        this.mapboxNavigation.onDestroy();
     }
 }
