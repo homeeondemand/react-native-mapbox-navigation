@@ -100,6 +100,7 @@ allprojects {
 Place your public token in your project's `android/app/src/main/AndroidManifest.xml`
 
 ```xml
+<!-- This should be a child of the application tag -->
 <meta-data android:name="MAPBOX_ACCESS_TOKEN"
     android:value="PUBLIC_TOKEN_HERE" />
 ```
