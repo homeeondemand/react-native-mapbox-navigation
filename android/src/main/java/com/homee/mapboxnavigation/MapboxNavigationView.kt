@@ -1,7 +1,6 @@
 package com.homee.mapboxnavigation
 
 import android.location.Location
-import android.view.View
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
@@ -23,7 +22,7 @@ import com.mapbox.navigation.ui.listeners.NavigationListener
 import com.mapbox.navigation.ui.map.NavigationMapboxMap
 
 
-class MapboxNavigationView(private val context: ThemedReactContext) : NavigationView(context), NavigationListener, OnNavigationReadyCallback {
+class MapboxNavigationView(private val context: ThemedReactContext) : NavigationView(context.baseContext), NavigationListener, OnNavigationReadyCallback {
     private var origin: Point? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
@@ -31,14 +30,9 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     private lateinit var mapboxNavigation: MapboxNavigation
 
     init {
-        initialize(this, getInitialCameraPosition())
         onCreate(null)
         onResume()
-
-        // needed to make instructions list click handler work
-        findViewById<View>(R.id.instructionListLayout).visibility = INVISIBLE
-        // hide the cancel button.
-        findViewById<View>(R.id.cancelBtn).visibility = INVISIBLE
+        initialize(this, getInitialCameraPosition())
     }
 
     override fun requestLayout() {
@@ -168,17 +162,18 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     }
 
     override fun onCancelNavigation() {
-        this.stopNavigation()
+        
     }
 
     override fun onDestroy() {
+        this.stopNavigation()
+        this.mapboxNavigation?.onDestroy()
         super.onDestroy()
-        this.mapboxNavigation.onDestroy()
     }
 
     override fun onStop() {
         super.onStop()
-        this.mapboxNavigation.unregisterLocationObserver(locationObserver)
+        this.mapboxNavigation?.unregisterLocationObserver(locationObserver)
     }
 
     fun setOrigin(origin: Point?) {
@@ -194,6 +189,6 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     }
 
     fun onDropViewInstance() {
-        this.mapboxNavigation.onDestroy()
+        this.onDestroy()
     }
 }
