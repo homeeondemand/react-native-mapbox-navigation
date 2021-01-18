@@ -105,6 +105,6 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   }
   
   func navigationViewController(_ navigationViewController: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
-    onProgressChange!(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
+    onProgressChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
   }
 }
