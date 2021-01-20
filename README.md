@@ -1,6 +1,17 @@
 # React Native Mapbox Navigation
 
-Smart Mapbox turn-by-turn routing based on real-time traffic for React Native. A navigation UI ready to drop into your application.
+<img alt="React Native Mapbox Navigation" src="./img/ios-nav.png" width="300" align="right" />
+
+Smart Mapbox turn-by-turn routing based on real-time traffic for React Native. A navigation UI ready to drop into your React Native application. [Sample demo usage shown here for the HOMEE Pro iOS app in the screenshot](https://www.homee.com/) ➡️
+
+## Features
+
+- A full-fledged turn-by-turn navigation UI for iPhone, iPad, and CarPlay that’s ready to drop into your application
+- [Professionally designed map styles](https://www.mapbox.com/maps/) for daytime and nighttime driving
+- Worldwide driving, cycling, and walking directions powered by [open data](https://www.mapbox.com/about/open/) and user feedback
+- Traffic avoidance and proactive rerouting based on current conditions in [over 55 countries](https://docs.mapbox.com/help/how-mapbox-works/directions/#traffic-data)
+- Natural-sounding turn instructions powered by [Amazon Polly](https://aws.amazon.com/polly/) (no configuration needed)
+- Support for over two dozen languages
 
 ## Installation Requirements
 
@@ -116,7 +127,7 @@ import MapboxNavigation from '@homee/react-native-mapbox-navigation';
 
 export const SomeComponent = () => {
   return (
-    <View style={styles.flexIt}>
+    <View style={styles.container}>
       <MapboxNavigation
         origin={[-97.760288, 30.273566]}
         destination={[-97.918842, 30.494466]}
@@ -127,14 +138,13 @@ export const SomeComponent = () => {
         onError={(event) => {
           const { message } = event.nativeEvent;
         }}
-        style={styles.flexIt}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  flexIt: {
+  container: {
     flex: 1,
   },
 });
