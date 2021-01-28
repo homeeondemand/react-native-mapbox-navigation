@@ -162,7 +162,9 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     }
 
     override fun onCancelNavigation() {
-        
+        val event = Arguments.createMap()
+        event.putString("onCancelNavigation", "Navigation Closed")
+        context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onCancelNavigation", event)
     }
 
     override fun onDestroy() {
