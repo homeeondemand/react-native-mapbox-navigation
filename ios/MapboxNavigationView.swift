@@ -33,6 +33,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   
   @objc var onProgressChange: RCTDirectEventBlock?
   @objc var onError: RCTDirectEventBlock?
+  @objc var onCancelNavigation: RCTDirectEventBlock?
   
   override init(frame: CGRect) {
     self.embedded = false
@@ -89,8 +90,6 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           let vc = NavigationViewController(for: route, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
           
           vc.delegate = strongSelf
-          
-          CancelButton.appearance().isHidden = true;
         
           parentVC.addChild(vc)
           strongSelf.addSubview(vc.view)
@@ -106,5 +105,13 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   
   func navigationViewController(_ navigationViewController: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
     onProgressChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
+  }
+  
+  func navigationViewControllerDidDismiss(_ navigationViewController: NavigationViewController, byCanceling canceled: Bool) {
+    if (!canceled) {
+      return;
+    }
+    
+    onCancelNavigation?(["message": ""]);
   }
 }
