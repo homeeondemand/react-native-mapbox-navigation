@@ -179,6 +179,10 @@ Function that is called frequently during route navigation. It receives `latitud
 
 Function that is called whenever an error occurs. It receives a `message` parameter that describes the error that occurred.
 
+#### `onCancelNavigation`
+
+Function that is called whenever a user cancels navigation.
+
 ## Contributing
 
 Contributions are very welcome. Please check out the [contributing document](CONTRIBUTING.md).
