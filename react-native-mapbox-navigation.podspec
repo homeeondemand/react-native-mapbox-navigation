@@ -19,6 +19,6 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.dependency "React"
-  s.dependency "MapboxNavigation", "~> 1.2.0-rc.1"
+  s.dependency "MapboxNavigation", "~> 1.2.1"
 end
 
