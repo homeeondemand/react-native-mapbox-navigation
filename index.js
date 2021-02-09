@@ -1,14 +1,9 @@
 import PropTypes from 'prop-types';
-import React from 'react';
-import {
-  Platform,
-  requireNativeComponent,
-  StyleSheet,
-  View,
-} from 'react-native';
+import * as React from 'react';
+import { requireNativeComponent, StyleSheet, View } from 'react-native';
 
 const MapboxNavigation = (props) => {
-  return <RNMapboxNavigation style={styles.flexIt} {...props} />;
+  return <RNMapboxNavigation style={styles.flex} {...props} />;
 };
 
 MapboxNavigation.propTypes = {
@@ -18,6 +13,7 @@ MapboxNavigation.propTypes = {
   onProgressChange: PropTypes.func,
   onError: PropTypes.func,
   onCancelNavigation: PropTypes.func,
+  onNavigationFinish: PropTypes.func,
 };
 
 const RNMapboxNavigation = requireNativeComponent(
@@ -26,7 +22,7 @@ const RNMapboxNavigation = requireNativeComponent(
 );
 
 const styles = StyleSheet.create({
-  flexIt: {
+  flex: {
     flex: 1,
   },
 });
