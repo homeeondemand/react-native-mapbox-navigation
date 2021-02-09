@@ -143,6 +143,9 @@ export const SomeComponent = () => {
           // or canceled via the OS system tray on android.
           // Do whatever you need to here.
         }}
+        onArrive={() => {
+          // Called when you arrive at the destination.
+        }}
       />
     </View>
   );
@@ -182,6 +185,10 @@ Function that is called whenever an error occurs. It receives a `message` parame
 #### `onCancelNavigation`
 
 Function that is called whenever a user cancels navigation.
+
+#### `onArrive`
+
+Function that is called when you arrive at the provided destination.
 
 ## Contributing
 
