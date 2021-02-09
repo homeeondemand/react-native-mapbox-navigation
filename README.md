@@ -1,6 +1,6 @@
 # React Native Mapbox Navigation
 
-<img alt="React Native Mapbox Navigation" src="./img/ios-nav.png?v=1" width="300" align="right" />
+<img alt="React Native Mapbox Navigation" src="./img/ios-nav.png?v=2" width="300" align="right" />
 
 Smart Mapbox turn-by-turn routing based on real-time traffic for React Native. A navigation UI ready to drop into your React Native application. [Sample demo usage shown here for the HOMEE Pro iOS app in the screenshot](https://www.homee.com/) ➡️
 
