@@ -34,7 +34,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   @objc var onProgressChange: RCTDirectEventBlock?
   @objc var onError: RCTDirectEventBlock?
   @objc var onCancelNavigation: RCTDirectEventBlock?
-  @objc var onNavigationFinish: RCTDirectEventBlock?
+  @objc var onArrive: RCTDirectEventBlock?
   
   override init(frame: CGRect) {
     self.embedded = false
@@ -117,7 +117,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   }
   
   func navigationViewController(_ navigationViewController: NavigationViewController, didArriveAt waypoint: Waypoint) -> Bool {
-    onNavigationFinish?(["message": ""]);
+    onArrive?(["message": ""]);
     return true;
   }
 }

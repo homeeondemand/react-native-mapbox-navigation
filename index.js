@@ -13,7 +13,7 @@ MapboxNavigation.propTypes = {
   onProgressChange: PropTypes.func,
   onError: PropTypes.func,
   onCancelNavigation: PropTypes.func,
-  onNavigationFinish: PropTypes.func,
+  onArrive: PropTypes.func,
 };
 
 const RNMapboxNavigation = requireNativeComponent(
