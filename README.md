@@ -132,8 +132,16 @@ export const SomeComponent = () => {
         origin={[-97.760288, 30.273566]}
         destination={[-97.918842, 30.494466]}
         shouldSimulateRoute={true}
-        onProgressChange={(event) => {
+        onLocationChange={(event) => {
           const { latitude, longitude } = event.nativeEvent;
+        }}
+        onRouteProgressChange={(event) => {
+          const {
+            distanceTraveled,
+            durationRemaining,
+            fractionTraveled,
+            distanceRemaining,
+          } = event.nativeEvent;
         }}
         onError={(event) => {
           const { message } = event.nativeEvent;
@@ -174,9 +182,13 @@ Array that contains the longitude and latitude for the destination point.<br>
 
 Boolean that controls route simulation. Set this as `true` to auto navigate which is useful for testing or demo purposes. Defaults to `false`.
 
-#### `onProgressChange`
+#### `onLocationChange`
 
 Function that is called frequently during route navigation. It receives `latitude` and `longitude` as parameters that represent the current location during navigation.
+
+#### `onRouteProgressChange`
+
+Function that is called frequently during route navigation. It receives `distanceTraveled`, `durationRemaining`, `fractionTraveled`, and `distanceRemaining` as parameters.
 
 #### `onError`
 
