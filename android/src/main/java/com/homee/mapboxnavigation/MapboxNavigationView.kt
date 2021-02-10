@@ -11,10 +11,12 @@ import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.navigation.base.internal.extensions.applyDefaultParams
 import com.mapbox.navigation.base.internal.route.RouteUrl
+import com.mapbox.navigation.base.trip.model.RouteProgress
 import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.MapboxNavigationProvider
 import com.mapbox.navigation.core.directions.session.RoutesRequestCallback
 import com.mapbox.navigation.core.trip.session.LocationObserver
+import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.mapbox.navigation.ui.NavigationView
 import com.mapbox.navigation.ui.NavigationViewOptions
 import com.mapbox.navigation.ui.OnNavigationReadyCallback
@@ -125,6 +127,7 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
         val optionsBuilder = NavigationViewOptions.builder(this.getContext())
         optionsBuilder.navigationListener(this)
         optionsBuilder.locationObserver(locationObserver)
+        optionsBuilder.routeProgressObserver(routeProgressObserver)
         optionsBuilder.directionsRoute(route)
         optionsBuilder.shouldSimulateRoute(this.shouldSimulateRoute)
         optionsBuilder.waynameChipEnabled(true)
@@ -143,9 +146,22 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
             val event = Arguments.createMap()
             event.putDouble("longitude", enhancedLocation.longitude)
             event.putDouble("latitude", enhancedLocation.latitude)
-            context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onProgressChange", event)
+            context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onLocationChange", event)
         }
     }
+
+
+    private val routeProgressObserver = object : RouteProgressObserver {
+        override fun onRouteProgressChanged(routeProgress: RouteProgress) {
+            val event = Arguments.createMap()
+            event.putDouble("distanceTraveled", routeProgress.distanceTraveled.toDouble())
+            event.putDouble("durationRemaining", routeProgress.durationRemaining.toDouble())
+            event.putDouble("fractionTraveled", routeProgress.fractionTraveled.toDouble())
+            event.putDouble("distanceRemaining", routeProgress.distanceRemaining.toDouble())
+            context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onRouteProgressChange", event)
+        }
+    }
+
 
     private fun sendErrorToReact(error: String?) {
         val event = Arguments.createMap()
