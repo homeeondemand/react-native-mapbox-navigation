@@ -31,7 +31,8 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   
   @objc var shouldSimulateRoute: Bool = false
   
-  @objc var onProgressChange: RCTDirectEventBlock?
+  @objc var onLocationChange: RCTDirectEventBlock?
+  @objc var onRouteProgressChange: RCTDirectEventBlock?
   @objc var onError: RCTDirectEventBlock?
   @objc var onCancelNavigation: RCTDirectEventBlock?
   @objc var onArrive: RCTDirectEventBlock?
@@ -105,7 +106,11 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   }
   
   func navigationViewController(_ navigationViewController: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
-    onProgressChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
+    onLocationChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
+    onRouteProgressChange?(["distanceTraveled": progress.distanceTraveled,
+                            "durationRemaining": progress.durationRemaining,
+                            "fractionTraveled": progress.fractionTraveled,
+                            "distanceRemaining": progress.distanceRemaining])
   }
   
   func navigationViewControllerDidDismiss(_ navigationViewController: NavigationViewController, byCanceling canceled: Bool) {
