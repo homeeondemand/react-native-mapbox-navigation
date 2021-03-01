@@ -33,8 +33,6 @@ npm install @homee/react-native-mapbox-navigation
 
 Read the iOS specific instructions below before running `pod install`.
 
----
-
 ### iOS Specific Instructions
 
 ---
@@ -59,8 +57,6 @@ After you create the Swift file, you should be prompted to choose if you want to
 This file is usually named YourProject-Bridging-Header.h. Don’t change this name manually, because Xcode configures the project with this exact filename.
 
 </details>
-
-<br />
 
 There are a few build settings in Xcode that are necessary. Make sure to set `Don't Dead-strip Inits and Terms` to `YES` and `Dead Code Stripping` to `YES` for all projects/targets.
 
@@ -105,8 +101,6 @@ If you are experiencing a _"multiple commands produce"_ build error in your Xcod
 `install! 'cocoapods', :disable_input_output_paths => true`
 
 For more information you can read the [docs provided by Mapbox](https://docs.mapbox.com/ios/navigation/overview/#configure-credentials).
-
----
 
 ### Android Specific Instructions
 
