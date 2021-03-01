@@ -33,9 +33,9 @@ npm install @homee/react-native-mapbox-navigation
 
 Read the iOS specific instructions below before running `pod install`.
 
-### iOS Specific Instructions
-
 ---
+
+### iOS Specific Instructions
 
 Make sure your react native project has an Objective-C bridging header for swift. If you don't have a bridging header you can follow these steps here below in the dropdown.
 
@@ -102,9 +102,9 @@ If you are experiencing a _"multiple commands produce"_ build error in your Xcod
 
 For more information you can read the [docs provided by Mapbox](https://docs.mapbox.com/ios/navigation/overview/#configure-credentials).
 
-### Android Specific Instructions
-
 ---
+
+### Android Specific Instructions
 
 Place your secret token in your android app's top level `gradle.properties` file:
 
