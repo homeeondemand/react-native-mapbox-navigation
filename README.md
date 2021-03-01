@@ -80,7 +80,7 @@ Build Settings Screenshot 2
 
 </details>
 
-Place your public token in your Xcode project's `Info.plist` and and add a `MGLMapboxAccessToken` key whose value is your public access token.
+Place your public token in your Xcode project's `Info.plist` and add a `MGLMapboxAccessToken` key whose value is your public access token.
 
 Place your secret token in a `.netrc` file in your OS home directory that contains this:
 
