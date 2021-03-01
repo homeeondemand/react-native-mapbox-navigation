@@ -56,15 +56,43 @@ This file is usually named YourProject-Bridging-Header.h. Don’t change this na
 
 </details>
 
-Place your secret token in a `.netrc` file in your home directory that contains this:
+<br />
+
+There are a few build settings in Xcode that are necessary. Make sure to set `Don't Dead-strip Inits and Terms` to `YES` and `Dead Code Stripping` to `YES` for all projects/targets.
+
+<details>
+<summary>
+Build Settings Screenshot 1
+</summary>
+
+![build setting linking](img/build-setting-linking.png)
+
+</details>
+
+<br />
+
+You will also need to remove the entry `"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)"` from library search paths if it is present for your project target -
+
+<details>
+<summary>
+Build Settings Screenshot 2
+</summary>
+
+![build setting path](img/build-setting-path.png)
+
+</details>
+
+<br />
+
+Place your public token in your Xcode project's `Info.plist` and and add a `MGLMapboxAccessToken` key whose value is your public access token.
+
+Place your secret token in a `.netrc` file in your OS home directory that contains this:
 
 ```
 machine api.mapbox.com
 login mapbox
 password <INSERT SECRET TOKEN>
 ```
-
-Place your public token in your project's `Info.plist` and and add a `MGLMapboxAccessToken` key whose value is your public access token.
 
 Now you are ready to install the cocoapod:
 
