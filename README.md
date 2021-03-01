@@ -33,7 +33,11 @@ npm install @homee/react-native-mapbox-navigation
 
 Read the iOS specific instructions below before running `pod install`.
 
+---
+
 ### iOS Specific Instructions
+
+---
 
 Make sure your react native project has an Objective-C bridging header for swift. If you don't have a bridging header you can follow these steps here below in the dropdown.
 
@@ -69,9 +73,7 @@ Build Settings Screenshot 1
 
 </details>
 
-<br />
-
-You will also need to remove the entry `"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)"` from library search paths if it is present for your project target -
+You will also need to remove the entry `"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)"` from `Library Search Paths` if it is present for your project target -
 
 <details>
 <summary>
@@ -81,8 +83,6 @@ Build Settings Screenshot 2
 ![build setting path](img/build-setting-path.png)
 
 </details>
-
-<br />
 
 Place your public token in your Xcode project's `Info.plist` and and add a `MGLMapboxAccessToken` key whose value is your public access token.
 
@@ -106,7 +106,11 @@ If you are experiencing a _"multiple commands produce"_ build error in your Xcod
 
 For more information you can read the [docs provided by Mapbox](https://docs.mapbox.com/ios/navigation/overview/#configure-credentials).
 
+---
+
 ### Android Specific Instructions
+
+---
 
 Place your secret token in your android app's top level `gradle.properties` file:
 
