@@ -82,6 +82,16 @@ Build Settings Screenshot 2
 
 Place your public token in your Xcode project's `Info.plist` and add a `MGLMapboxAccessToken` key whose value is your public access token.
 
+Add the `UIBackgroundModes` key to `Info.plist` with `audio` and `location` if it is not already present. This will allow your app to deliver audible instructions while it is in the background or the device is locked.
+
+```
+<key>UIBackgroundModes</key>
+<array>
+  <string>audio</string>
+  <string>location</string>
+</array>
+```
+
 Place your secret token in a `.netrc` file in your OS home directory that contains this:
 
 ```
