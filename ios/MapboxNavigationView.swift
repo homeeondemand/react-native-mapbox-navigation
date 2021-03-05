@@ -30,6 +30,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   }
   
   @objc var shouldSimulateRoute: Bool = false
+  @objc var showsEndOfRouteFeedback: Bool = true
   
   @objc var onLocationChange: RCTDirectEventBlock?
   @objc var onRouteProgressChange: RCTDirectEventBlock?
@@ -90,6 +91,8 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           
           let navigationOptions = NavigationOptions(navigationService: navigationService)
           let vc = NavigationViewController(for: route, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
+
+          vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
           
           vc.delegate = strongSelf
         

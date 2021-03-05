@@ -10,5 +10,6 @@ RCT_EXPORT_VIEW_PROPERTY(onArrive, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(origin, NSArray)
 RCT_EXPORT_VIEW_PROPERTY(destination, NSArray)
 RCT_EXPORT_VIEW_PROPERTY(shouldSimulateRoute, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(showsEndOfRouteFeedback, BOOL)
 
 @end
