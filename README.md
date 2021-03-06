@@ -218,6 +218,10 @@ Array that contains the longitude and latitude for the destination point.<br>
 
 Boolean that controls route simulation. Set this as `true` to auto navigate which is useful for testing or demo purposes. Defaults to `false`.
 
+#### `showsEndOfRouteFeedback`
+
+Boolean that controls showing End of route Feedback UI when the route controller arrives at the final destination. Defaults to `true.`
+
 #### `onLocationChange`
 
 Function that is called frequently during route navigation. It receives `latitude` and `longitude` as parameters that represent the current location during navigation.

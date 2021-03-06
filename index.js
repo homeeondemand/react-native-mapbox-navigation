@@ -15,6 +15,7 @@ MapboxNavigation.propTypes = {
   onError: PropTypes.func,
   onCancelNavigation: PropTypes.func,
   onArrive: PropTypes.func,
+  showsEndOfRouteFeedback: PropTypes.bool,
 };
 
 const RNMapboxNavigation = requireNativeComponent(
