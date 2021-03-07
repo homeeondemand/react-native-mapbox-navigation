@@ -100,6 +100,67 @@ login mapbox
 password <INSERT SECRET TOKEN>
 ```
 
+Add the following to your ios podfile -
+
+```ruby
+  pre_install do |installer|
+    $RNMBNAV.pre_install(installer)
+    # any other pre install hooks here
+  end
+
+  post_install do |installer|
+    $RNMBNAV.post_install(installer)
+    # any other post install hooks here
+  end
+```
+
+<details>
+<summary>podfile example</summary>
+
+```ruby
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+platform :ios, '10.0'
+install! 'cocoapods', :disable_input_output_paths => true
+
+target 'AwesomeProject' do
+  config = use_native_modules!
+
+  use_react_native!(:path => config["reactNativePath"])
+
+  target 'AwesomeProjectTests' do
+    inherit! :complete
+    # Pods for testing
+  end
+
+  pre_install do |installer|
+    $RNMBNAV.pre_install(installer)
+  end
+
+  # Enables Flipper.
+  #
+  # Note that if you have use_frameworks! enabled, Flipper will not work and
+  # you should disable these next few lines.
+  use_flipper!
+  post_install do |installer|
+    flipper_post_install(installer)
+    $RNMBNAV.post_install(installer)
+  end
+end
+
+target 'AwesomeProject-tvOS' do
+  # Pods for AwesomeProject-tvOS
+
+  target 'AwesomeProject-tvOSTests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+end
+```
+
+</details>
+
 Now you are ready to install the cocoapod:
 
 ```
