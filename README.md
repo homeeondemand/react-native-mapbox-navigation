@@ -110,6 +110,23 @@ If you are experiencing a _"multiple commands produce"_ build error in your Xcod
 
 `install! 'cocoapods', :disable_input_output_paths => true`
 
+If you are having an issue with your archive not showing up in organizer after archiving then you will need to open `ios/Pods/Target Support Files/@react-native-mapbox-gl-mapbox-static/@react-native-mapbox-gl-mapbox-static-copy-dsyms.sh` and comment out lines 85 thru 89 -
+
+<details>
+<summary>
+Lines 85 thru 89
+</summary>
+
+```sh
+#install_dsym "${PODS_ROOT}/@react-native-mapbox-gl-mapbox-static/dynamic/MapboxMobileEvents.framework.dSYM"
+#install_bcsymbolmap "${PODS_ROOT}/@react-native-mapbox-gl-mapbox-static/dynamic/93C58D95-90B9-30C8-8F60-4BDE32FD7E8E.bcsymbolmap"
+#install_bcsymbolmap "${PODS_ROOT}/@react-native-mapbox-gl-mapbox-static/dynamic/BB87D8DD-493F-37AA-BD21-2BC609B8311B.bcsymbolmap"
+#install_bcsymbolmap "${PODS_ROOT}/@react-native-mapbox-gl-mapbox-static/dynamic/B184533A-B4A2-3D2F-AD72-A6C33D9914F4.bcsymbolmap"
+#install_bcsymbolmap "${PODS_ROOT}/@react-native-mapbox-gl-mapbox-static/dynamic/E2FE4B9E-73E5-34BF-B8B9-8FECEBE04D8D.bcsymbolmap"
+```
+
+</details>
+
 For more information you can read the [docs provided by Mapbox](https://docs.mapbox.com/ios/navigation/overview/#configure-credentials).
 
 ---
