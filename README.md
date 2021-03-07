@@ -167,7 +167,8 @@ export const SomeComponent = () => {
       <MapboxNavigation
         origin={[-97.760288, 30.273566]}
         destination={[-97.918842, 30.494466]}
-        shouldSimulateRoute={true}
+        shouldSimulateRoute
+        showsEndOfRouteFeedback
         onLocationChange={(event) => {
           const { latitude, longitude } = event.nativeEvent;
         }}
@@ -220,7 +221,7 @@ Boolean that controls route simulation. Set this as `true` to auto navigate whic
 
 #### `showsEndOfRouteFeedback`
 
-Boolean that controls showing End of route Feedback UI when the route controller arrives at the final destination. Defaults to `true.`
+Boolean that controls showing the end of route feedback UI when the route controller arrives at the final destination. Defaults to `false`.
 
 #### `onLocationChange`
 
