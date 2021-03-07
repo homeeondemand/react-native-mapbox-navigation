@@ -28,6 +28,7 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     private var origin: Point? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
+    private var showsEndOfRouteFeedback = false
     private lateinit var navigationMapboxMap: NavigationMapboxMap
     private lateinit var mapboxNavigation: MapboxNavigation
 
@@ -174,7 +175,7 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     }
 
     override fun onFinalDestinationArrival(enableDetailedFeedbackFlowAfterTbt: Boolean, enableArrivalExperienceFeedback: Boolean) {
-        super.onFinalDestinationArrival(enableDetailedFeedbackFlowAfterTbt, enableArrivalExperienceFeedback)
+        super.onFinalDestinationArrival(this.showsEndOfRouteFeedback, this.showsEndOfRouteFeedback)
         val event = Arguments.createMap()
         event.putString("onArrive", "")
         context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onArrive", event)
@@ -211,6 +212,10 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
 
     fun setShouldSimulateRoute(shouldSimulateRoute: Boolean) {
         this.shouldSimulateRoute = shouldSimulateRoute
+    }
+
+    fun setShowsEndOfRouteFeedback(showsEndOfRouteFeedback: Boolean) {
+        this.showsEndOfRouteFeedback = showsEndOfRouteFeedback
     }
 
     fun onDropViewInstance() {

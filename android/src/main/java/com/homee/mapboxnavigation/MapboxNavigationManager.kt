@@ -70,4 +70,9 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     fun setShouldSimulateRoute(view: MapboxNavigationView, shouldSimulateRoute: Boolean) {
         view.setShouldSimulateRoute(shouldSimulateRoute)
     }
+
+    @ReactProp(name = "showsEndOfRouteFeedback")
+    fun setShowsEndOfRouteFeedback(view: MapboxNavigationView, showsEndOfRouteFeedback: Boolean) {
+        view.setShowsEndOfRouteFeedback(showsEndOfRouteFeedback)
+    }
 }
