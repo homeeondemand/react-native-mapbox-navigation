@@ -327,4 +327,4 @@ Contributions are very welcome. Please check out the [contributing document](CON
 
 ## License
 
-This project is [MIT](LICENSE) licensed.
+The source code in this library is [MIT](LICENSE) licensed. The usage of this library will fall under Mapbox terms (this library downloads Mapbox SDKs and uses that closed source in conjunction with the open source code here).
