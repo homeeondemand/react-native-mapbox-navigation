@@ -3,8 +3,13 @@
   "title": "React Native Mapbox Navigation",
   "version": "1.0.7",
   "description": "Smart Mapbox turn-by-turn routing based on real-time traffic for React Native.",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
+    "prepublishOnly": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -28,5 +33,9 @@
     "react": "^16.8.1",
     "react-native": ">=0.60.0-rc.0 <1.0.x"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "react": "^16.8.1",
+    "react-native": ">=0.60.0-rc.0 <1.0.x",
+    "typescript": "4.3.5"
+  }
 }
