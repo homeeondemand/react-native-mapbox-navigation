@@ -301,6 +301,10 @@ Boolean that controls route simulation. Set this as `true` to auto navigate whic
 
 Boolean that controls showing the end of route feedback UI when the route controller arrives at the final destination. Defaults to `false`.
 
+#### `hideStatusView`
+
+Boolean that controls showing the `StatusView` (iOS only). This is the transparent black bar with the "Simulating Navigation" text shown in the above screenshot. Defaults to `false`.
+
 #### `onLocationChange`
 
 Function that is called frequently during route navigation. It receives `latitude` and `longitude` as parameters that represent the current location during navigation.
