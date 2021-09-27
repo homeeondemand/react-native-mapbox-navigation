@@ -75,4 +75,13 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     fun setShowsEndOfRouteFeedback(view: MapboxNavigationView, showsEndOfRouteFeedback: Boolean) {
         view.setShowsEndOfRouteFeedback(showsEndOfRouteFeedback)
     }
+
+    @ReactProp(name = "mute")
+    fun setMute(view: MapboxNavigationView, mute: Boolean) {
+        val isMuted = view.isVoiceGuidanceMuted()
+        if (mute != isMuted) {
+            view.toggleMute()
+        }
+        view.setMute(mute)
+    }
 }
