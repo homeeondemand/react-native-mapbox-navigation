@@ -10,6 +10,9 @@
 		957B881A244753D70058C6C1 /* MapboxNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957B8816244753D70058C6C1 /* MapboxNavigationView.swift */; };
 		957B881C244753D70058C6C1 /* MapboxNavigationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 957B8818244753D70058C6C1 /* MapboxNavigationManager.m */; };
 		957B881D244753D70058C6C1 /* MapboxNavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957B8819244753D70058C6C1 /* MapboxNavigationManager.swift */; };
+		AC7A22D62706EE3D00141160 /* MapboxNavigationBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC7A22D52706EE3D00141160 /* MapboxNavigationBannerView.swift */; };
+		AC7A22D82706EE7900141160 /* MapboxNavigationCameraStateTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC7A22D72706EE7900141160 /* MapboxNavigationCameraStateTransition.swift */; };
+		AC7A22DA2706EEDA00141160 /* MapboxNavigationViewportDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC7A22D92706EEDA00141160 /* MapboxNavigationViewportDataSource.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -30,6 +33,9 @@
 		957B8816244753D70058C6C1 /* MapboxNavigationView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapboxNavigationView.swift; sourceTree = "<group>"; };
 		957B8818244753D70058C6C1 /* MapboxNavigationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapboxNavigationManager.m; sourceTree = "<group>"; };
 		957B8819244753D70058C6C1 /* MapboxNavigationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapboxNavigationManager.swift; sourceTree = "<group>"; };
+		AC7A22D52706EE3D00141160 /* MapboxNavigationBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxNavigationBannerView.swift; sourceTree = "<group>"; };
+		AC7A22D72706EE7900141160 /* MapboxNavigationCameraStateTransition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxNavigationCameraStateTransition.swift; sourceTree = "<group>"; };
+		AC7A22D92706EEDA00141160 /* MapboxNavigationViewportDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxNavigationViewportDataSource.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +60,9 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				AC7A22D92706EEDA00141160 /* MapboxNavigationViewportDataSource.swift */,
+				AC7A22D72706EE7900141160 /* MapboxNavigationCameraStateTransition.swift */,
+				AC7A22D52706EE3D00141160 /* MapboxNavigationBannerView.swift */,
 				957B8818244753D70058C6C1 /* MapboxNavigationManager.m */,
 				957B8819244753D70058C6C1 /* MapboxNavigationManager.swift */,
 				957B8816244753D70058C6C1 /* MapboxNavigationView.swift */,
@@ -120,8 +129,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AC7A22D82706EE7900141160 /* MapboxNavigationCameraStateTransition.swift in Sources */,
+				AC7A22DA2706EEDA00141160 /* MapboxNavigationViewportDataSource.swift in Sources */,
 				957B881C244753D70058C6C1 /* MapboxNavigationManager.m in Sources */,
 				957B881D244753D70058C6C1 /* MapboxNavigationManager.swift in Sources */,
+				AC7A22D62706EE3D00141160 /* MapboxNavigationBannerView.swift in Sources */,
 				957B881A244753D70058C6C1 /* MapboxNavigationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -176,6 +188,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -218,6 +231,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

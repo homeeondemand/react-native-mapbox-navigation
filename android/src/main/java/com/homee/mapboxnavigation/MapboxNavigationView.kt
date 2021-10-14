@@ -1,168 +1,214 @@
 package com.homee.mapboxnavigation
 
-import android.location.Location
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.util.Log
+import android.widget.LinearLayout
 import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.events.RCTEventEmitter
-import com.mapbox.api.directions.v5.models.DirectionsRoute
-import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.geojson.Point
-import com.mapbox.mapboxsdk.Mapbox
-import com.mapbox.mapboxsdk.camera.CameraPosition
-import com.mapbox.navigation.base.internal.extensions.applyDefaultParams
-import com.mapbox.navigation.base.internal.route.RouteUrl
-import com.mapbox.navigation.base.trip.model.RouteProgress
-import com.mapbox.navigation.core.MapboxNavigation
-import com.mapbox.navigation.core.MapboxNavigationProvider
-import com.mapbox.navigation.core.directions.session.RoutesRequestCallback
-import com.mapbox.navigation.core.trip.session.LocationObserver
-import com.mapbox.navigation.core.trip.session.RouteProgressObserver
-import com.mapbox.navigation.ui.NavigationView
-import com.mapbox.navigation.ui.NavigationViewOptions
-import com.mapbox.navigation.ui.OnNavigationReadyCallback
-import com.mapbox.navigation.ui.listeners.NavigationListener
-import com.mapbox.navigation.ui.map.NavigationMapboxMap
+import com.mapbox.maps.plugin.LocationPuck2D
+import com.mapbox.maps.plugin.locationcomponent.location
+import android.graphics.drawable.Drawable
+import com.mapbox.maps.plugin.compass.compass
+import com.mapbox.maps.plugin.logo.logo
+import java.net.URL
+import android.os.AsyncTask
+import android.os.Handler
+import android.os.Looper
+import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.mapbox.maps.*
+import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.*
+import com.mapbox.maps.plugin.attribution.attribution
+import com.mapbox.maps.plugin.scalebar.scalebar
 
 
-class MapboxNavigationView(private val context: ThemedReactContext) : NavigationView(context.baseContext), NavigationListener, OnNavigationReadyCallback {
+class MapboxNavigationView(private val context: ThemedReactContext, private val mCallerContext: ReactApplicationContext): LinearLayout(context.baseContext) {
     private var origin: Point? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
-    private lateinit var navigationMapboxMap: NavigationMapboxMap
-    private lateinit var mapboxNavigation: MapboxNavigation
+    private var mapToken: String? = null
+    private var navigationToken: String? = null
+    private var camera: ReadableMap? = null
+    private var destinationMarker: Drawable? = null
+    private var userLocatorMap: Drawable? = null
+    private var userLocatorNavigation: Drawable? = null
+    private var styleURL: String? = null
+    private var showUserLocation = false
+    private var markers: ReadableArray? = null
+    private var polyline: ReadableArray? = null
+
+    private var mapboxMap: MapboxMap? = null
+    private var mapView: MapView? = null
+
+    private var isNavigation = false
+    private var polylineAnnotationManager: PolylineAnnotationManager? = null
+    private var polylineAnnotation: PolylineAnnotation? = null
+    private var pointAnnotation: PointAnnotation? = null
+    private var pointAnnotationManager: PointAnnotationManager? = null
 
     init {
-        onCreate(null)
-        onResume()
-        initialize(this, getInitialCameraPosition())
+        mCallerContext.runOnUiQueueThread {
+            if (navigationToken != null && destination != null) {
+                isNavigation = true
+                Log.w("MapboxNavigationView", " ----- init nav")
+            } else {
+                ResourceOptionsManager.getDefault(mCallerContext, mapToken)
+
+                var mapboxMapView = MapboxNavigationMapView(context, this)
+
+                mapView = mapboxMapView.mapView
+            }
+
+            mapView?.let { mapView ->
+                mapboxMap = mapView.getMapboxMap()
+
+                mapView.logo?.enabled = false
+                mapView.compass?.enabled = false
+                mapView.attribution?.iconColor = Color.TRANSPARENT
+                mapView.scalebar?.enabled = false
+
+                val annotationApi = mapView.annotations
+                polylineAnnotationManager = annotationApi?.createPolylineAnnotationManager(mapView)
+                pointAnnotationManager = annotationApi?.createPointAnnotationManager(mapView)
+            }
+
+            updateMap()
+        }
     }
 
-    override fun requestLayout() {
-        super.requestLayout()
-
-        // This view relies on a measure + layout pass happening after it calls requestLayout().
-        // https://github.com/facebook/react-native/issues/4990#issuecomment-180415510
-        // https://stackoverflow.com/questions/39836356/react-native-resize-custom-ui-component
-        post(measureAndLayout)
+    private fun updateMap() {
+        if (styleURL != null) {
+            mapboxMap?.loadStyleUri(styleURL!!) {
+                customizeMap()
+            }
+        } else {
+            customizeMap()
+        }
     }
 
-    private val measureAndLayout = Runnable {
-        measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY))
-        layout(left, top, right, bottom)
-    }
-
-    private fun getInitialCameraPosition(): CameraPosition {
-        return CameraPosition.Builder()
-                .zoom(15.0)
+    private fun customizeMap() {
+        if (camera != null) {
+            val cameraOptions = CameraOptions.Builder()
+                .center(Point.fromLngLat(
+                    camera!!.getArray("center")!!.getDouble(0),
+                    camera!!.getArray("center")!!.getDouble(1))
+                )
+                .zoom(camera!!.getDouble("zoom"))
+                .pitch(0.0)
                 .build()
-    }
+            mapboxMap?.setCamera(cameraOptions)
+        }
 
-    override fun onNavigationReady(isRunning: Boolean) {
-        try {
-            val accessToken = Mapbox.getAccessToken()
-            if (accessToken == null) {
-                sendErrorToReact("Mapbox access token is not set")
-                return
+        if (showUserLocation) {
+            mapView?.location?.updateSettings {
+                enabled = true
+                pulsingEnabled = false
             }
+        }
 
-            if (origin == null || destination == null) {
-                sendErrorToReact("origin and destination are required")
-                return
+        if (userLocatorMap != null) {
+            mapView?.location?.locationPuck = LocationPuck2D(
+                topImage = userLocatorMap,
+            )
+        }
+
+        if (isNavigation && userLocatorNavigation != null) {
+            mapView?.location?.locationPuck = LocationPuck2D(
+                topImage = userLocatorNavigation,
+            )
+        }
+
+        addPolyline()
+        addMarkers()
+    }
+
+    private fun addPolyline() {
+        if (mapView != null) {
+            if (polyline != null) {
+                val points = mutableListOf<Point>()
+                for (i in 0 until polyline!!.size()) {
+                    val polylineArr = polyline!!.getArray(i)!!
+                    val lat = polylineArr.getDouble(0)
+                    val lng = polylineArr.getDouble(1)
+
+                    points.add(Point.fromLngLat(lng, lat))
+                }
+
+                val polylineAnnotationOptions = PolylineAnnotationOptions()
+                    .withPoints(points)
+                    .withLineColor("#00AA8D")
+                    .withLineWidth(5.0)
+
+                polylineAnnotation = polylineAnnotationManager?.create(polylineAnnotationOptions)
+
+                val newCameraOptions = mapboxMap!!.cameraForCoordinates(points, EdgeInsets(42.0, 32.0, 148.0 + 32.0, 32.0))
+                mapboxMap?.setCamera(newCameraOptions)
+            } else {
+                Log.w("MapboxNavigationView", "will delete all polyline")
+                if (polylineAnnotation != null) {
+                    Log.w("MapboxNavigationView", "delete all polyline")
+                    Handler(Looper.getMainLooper()).post {
+                        polylineAnnotationManager?.onDestroy()
+                        Log.w("MapboxNavigationView", "delete all polyline done")
+                        polylineAnnotation = null
+                    }
+                }
             }
+        }
+    }
 
-            if (::navigationMapboxMap.isInitialized) {
-                return
+    private fun addMarkers() {
+        if (mapView != null) {
+            if (markers != null) {
+                doAsync {
+                    var i = 0
+                    while (i < markers!!.size()) {
+                        val marker = markers!!.getMap(i)
+
+                        if (marker != null) {
+                            val markerLatitude = marker.getDouble("latitude")!!
+                            val markerLongitude = marker.getDouble("longitude")!!
+
+                            val markerIcon = marker.getMap("image")!!
+                            val markerUrl = markerIcon.getString("uri")
+                            val inputStream = URL(markerUrl).openStream()
+                            val icon = BitmapFactory.decodeStream(inputStream)
+                            val pointAnnotationOptions: PointAnnotationOptions =
+                                PointAnnotationOptions()
+                                    .withPoint(
+                                        Point.fromLngLat(
+                                            markerLongitude,
+                                            markerLatitude
+                                        )
+                                    )
+                                    .withIconImage(icon)
+
+                            pointAnnotation = pointAnnotationManager?.create(pointAnnotationOptions)
+                        }
+
+                        i++
+                    }
+                }
+            } else {
+                Log.w("MapboxNavigationView", "will delete all points")
+                if (pointAnnotation != null) {
+                    Log.w("MapboxNavigationView", "delete all points")
+                    Handler(Looper.getMainLooper()).post {
+                        pointAnnotationManager?.deleteAll()
+                        Log.w("MapboxNavigationView", "delete all points done")
+                        pointAnnotation = null
+                    }
+                }
             }
-
-            if (this.retrieveNavigationMapboxMap() == null) {
-                sendErrorToReact("retrieveNavigationMapboxMap() is null")
-                return
-            }
-
-            this.navigationMapboxMap = this.retrieveNavigationMapboxMap()!!
-
-            //this.retrieveMapboxNavigation()?.let { this.mapboxNavigation = it } // this does not work
-
-            // fetch the route
-            val navigationOptions = MapboxNavigation
-                    .defaultNavigationOptionsBuilder(context, accessToken)
-                    .isFromNavigationUi(true)
-                    .build()
-            this.mapboxNavigation = MapboxNavigationProvider.create(navigationOptions)
-            this.mapboxNavigation.requestRoutes(RouteOptions.builder()
-                    .applyDefaultParams()
-                    .accessToken(accessToken)
-                    .coordinates(mutableListOf(origin, destination))
-                    .profile(RouteUrl.PROFILE_DRIVING)
-                    .steps(true)
-                    .voiceInstructions(true)
-                    .build(), routesReqCallback)
-        } catch (ex: Exception) {
-            sendErrorToReact(ex.toString())
         }
     }
-
-    private val routesReqCallback = object : RoutesRequestCallback {
-        override fun onRoutesReady(routes: List<DirectionsRoute>) {
-            if (routes.isEmpty()) {
-                sendErrorToReact("No route found")
-                return;
-            }
-
-            startNav(routes[0])
-        }
-
-        override fun onRoutesRequestFailure(throwable: Throwable, routeOptions: RouteOptions) {
-
-
-        }
-
-        override fun onRoutesRequestCanceled(routeOptions: RouteOptions) {
-
-        }
-    }
-
-    private fun startNav(route: DirectionsRoute) {
-        val optionsBuilder = NavigationViewOptions.builder(this.getContext())
-        optionsBuilder.navigationListener(this)
-        optionsBuilder.locationObserver(locationObserver)
-        optionsBuilder.routeProgressObserver(routeProgressObserver)
-        optionsBuilder.directionsRoute(route)
-        optionsBuilder.shouldSimulateRoute(this.shouldSimulateRoute)
-        optionsBuilder.waynameChipEnabled(true)
-        this.startNavigation(optionsBuilder.build())
-    }
-
-    private val locationObserver = object : LocationObserver {
-        override fun onRawLocationChanged(rawLocation: Location) {
-
-        }
-
-        override fun onEnhancedLocationChanged(
-                enhancedLocation: Location,
-                keyPoints: List<Location>
-        ) {
-            val event = Arguments.createMap()
-            event.putDouble("longitude", enhancedLocation.longitude)
-            event.putDouble("latitude", enhancedLocation.latitude)
-            context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onLocationChange", event)
-        }
-    }
-
-
-    private val routeProgressObserver = object : RouteProgressObserver {
-        override fun onRouteProgressChanged(routeProgress: RouteProgress) {
-            val event = Arguments.createMap()
-            event.putDouble("distanceTraveled", routeProgress.distanceTraveled.toDouble())
-            event.putDouble("durationRemaining", routeProgress.durationRemaining.toDouble())
-            event.putDouble("fractionTraveled", routeProgress.fractionTraveled.toDouble())
-            event.putDouble("distanceRemaining", routeProgress.distanceRemaining.toDouble())
-            context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onRouteProgressChange", event)
-        }
-    }
-
 
     private fun sendErrorToReact(error: String?) {
         val event = Arguments.createMap()
@@ -170,55 +216,109 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
         context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onError", event)
     }
 
-    override fun onNavigationRunning() {
-
-    }
-
-    override fun onFinalDestinationArrival(enableDetailedFeedbackFlowAfterTbt: Boolean, enableArrivalExperienceFeedback: Boolean) {
-        super.onFinalDestinationArrival(this.showsEndOfRouteFeedback, this.showsEndOfRouteFeedback)
-        val event = Arguments.createMap()
-        event.putString("onArrive", "")
-        context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onArrive", event)
-    }
-
-    override fun onNavigationFinished() {
-
-    }
-
-    override fun onCancelNavigation() {
-        val event = Arguments.createMap()
-        event.putString("onCancelNavigation", "Navigation Closed")
-        context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onCancelNavigation", event)
-    }
-
-    override fun onDestroy() {
-        this.stopNavigation()
-        this.mapboxNavigation?.onDestroy()
-        super.onDestroy()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        this.mapboxNavigation?.unregisterLocationObserver(locationObserver)
-    }
+    //override fun onDestroy() {
+    //    this.stopNavigation()
+    //    this.mapboxNavigation?.onDestroy()
+    //    super.onDestroy()
+    //}
 
     fun setOrigin(origin: Point?) {
         this.origin = origin
+        updateMap()
     }
 
     fun setDestination(destination: Point?) {
         this.destination = destination
+        updateMap()
     }
 
     fun setShouldSimulateRoute(shouldSimulateRoute: Boolean) {
         this.shouldSimulateRoute = shouldSimulateRoute
+        updateMap()
     }
 
     fun setShowsEndOfRouteFeedback(showsEndOfRouteFeedback: Boolean) {
         this.showsEndOfRouteFeedback = showsEndOfRouteFeedback
+        updateMap()
+    }
+
+    fun setMapToken(mapToken: String) {
+        this.mapToken = mapToken
+        updateMap()
+    }
+
+    fun setNavigationToken(navigationToken: String) {
+        this.navigationToken = navigationToken
+        updateMap()
+    }
+    
+    fun setCamera(camera: ReadableMap) {
+        this.camera = camera
+        updateMap()
+    }
+    
+    fun setDestinationMarker(destinationMarker: ReadableMap) {
+        doAsync {
+            val imageUrl = destinationMarker?.getString("uri")
+            val inputStream = URL(imageUrl).openStream()
+            val drawable = Drawable.createFromStream(inputStream, "src")
+            this.destinationMarker = drawable
+            updateMap()
+        }
+    }
+    
+    fun setUserLocatorMap(userLocatorMap: ReadableMap) {
+        doAsync {
+            val imageUrl = userLocatorMap?.getString("uri")
+            val inputStream = URL(imageUrl).openStream()
+            val drawable = Drawable.createFromStream(inputStream, "src")
+            this.userLocatorMap = drawable
+            updateMap()
+        }
+    }
+    
+    fun setUserLocatorNavigation(userLocatorNavigation: ReadableMap) {
+        doAsync {
+            val imageUrl = userLocatorNavigation?.getString("uri")
+            val inputStream = URL(imageUrl).openStream()
+            val drawable = Drawable.createFromStream(inputStream, "src")
+            this.userLocatorNavigation = drawable
+            updateMap()
+        }
+    }
+    
+    fun setStyleURL(styleURL: String) {
+        this.styleURL = styleURL
+        updateMap()
+    }
+    
+    fun setShowUserLocation(showUserLocation: Boolean) {
+        this.showUserLocation = showUserLocation
+        updateMap()
+    }
+    
+    fun setMarkers(markers: ReadableArray?) {
+        this.markers = markers
+        updateMap()
+    }
+    
+    fun setPolyline(polyline: ReadableArray?) {
+        this.polyline = polyline
+        updateMap()
     }
 
     fun onDropViewInstance() {
-        this.onDestroy()
+        mapView?.onDestroy()
+    }
+
+    class doAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
+        init {
+            execute()
+        }
+
+        override fun doInBackground(vararg params: Void?): Void? {
+            handler()
+            return null
+        }
     }
 }

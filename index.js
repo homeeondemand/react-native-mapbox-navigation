@@ -8,7 +8,8 @@ const MapboxNavigation = (props) => {
 
 MapboxNavigation.propTypes = {
   origin: PropTypes.array.isRequired,
-  destination: PropTypes.array.isRequired,
+  destination: PropTypes.array,
+  camera: PropTypes.object,
   shouldSimulateRoute: PropTypes.bool,
   onLocationChange: PropTypes.func,
   onRouteProgressChange: PropTypes.func,

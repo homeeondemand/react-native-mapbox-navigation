@@ -1,36 +1,26 @@
 package com.homee.mapboxnavigation
 
 import android.content.pm.PackageManager
+import android.util.Log
+import android.widget.LinearLayout
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.mapbox.geojson.Point
-import com.mapbox.mapboxsdk.Mapbox
 import javax.annotation.Nonnull
 
 class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : SimpleViewManager<MapboxNavigationView>() {
-    init {
-        mCallerContext.runOnUiQueueThread {
-            try {
-                val app = mCallerContext.packageManager.getApplicationInfo(mCallerContext.packageName, PackageManager.GET_META_DATA)
-                val bundle = app.metaData
-                val accessToken = bundle.getString("MAPBOX_ACCESS_TOKEN")
-                Mapbox.getInstance(mCallerContext, accessToken)
-            } catch (e: PackageManager.NameNotFoundException) {
-                e.printStackTrace()
-            }
-        }
-    }
 
     override fun getName(): String {
         return "MapboxNavigation"
     }
 
     public override fun createViewInstance(@Nonnull reactContext: ThemedReactContext): MapboxNavigationView {
-        return MapboxNavigationView(reactContext)
+        return MapboxNavigationView(reactContext, mCallerContext)
     }
 
     override fun onDropViewInstance(view: MapboxNavigationView) {
@@ -45,12 +35,13 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
                 "onCancelNavigation", MapBuilder.of("registrationName", "onCancelNavigation"),
                 "onArrive", MapBuilder.of("registrationName", "onArrive"),
                 "onRouteProgressChange", MapBuilder.of("registrationName", "onRouteProgressChange"),
+                "onNavigationStarted", MapBuilder.of("registrationName", "onNavigationStarted"),
         )
     }
 
     @ReactProp(name = "origin")
     fun setOrigin(view: MapboxNavigationView, sources: ReadableArray?) {
-        if (sources == null) {
+        if (sources == null || sources.toArrayList().filterNotNull().count() == 0) {
             view.setOrigin(null)
             return
         }
@@ -59,7 +50,7 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
 
     @ReactProp(name = "destination")
     fun setDestination(view: MapboxNavigationView, sources: ReadableArray?) {
-        if (sources == null) {
+        if (sources == null || sources.toArrayList().filterNotNull().count() == 0) {
             view.setDestination(null)
             return
         }
@@ -75,4 +66,55 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     fun setShowsEndOfRouteFeedback(view: MapboxNavigationView, showsEndOfRouteFeedback: Boolean) {
         view.setShowsEndOfRouteFeedback(showsEndOfRouteFeedback)
     }
+
+    @ReactProp(name = "mapToken")
+    fun setMapToken(view: MapboxNavigationView, mapToken: String) {
+        view.setMapToken(mapToken)
+    }
+
+    @ReactProp(name = "navigationToken")
+    fun setNavigationToken(view: MapboxNavigationView, navigationToken: String) {
+        view.setNavigationToken(navigationToken)
+    }
+
+    @ReactProp(name = "camera")
+    fun setCamera(view: MapboxNavigationView, camera: ReadableMap) {
+        view.setCamera(camera)
+    }
+
+    @ReactProp(name = "destinationMarker")
+    fun setDestinationMarker(view: MapboxNavigationView, destinationMarker: ReadableMap) {
+        view.setDestinationMarker(destinationMarker)
+    }
+
+    @ReactProp(name = "userLocatorMap")
+    fun setUserLocatorMap(view: MapboxNavigationView, userLocatorMap: ReadableMap) {
+        view.setUserLocatorMap(userLocatorMap)
+    }
+
+    @ReactProp(name = "userLocatorNavigation")
+    fun setUserLocatorNavigation(view: MapboxNavigationView, userLocatorNavigation: ReadableMap) {
+        view.setUserLocatorNavigation(userLocatorNavigation)
+    }
+
+    @ReactProp(name = "styleURL")
+    fun setStyleURL(view: MapboxNavigationView, styleURL: String) {
+        view.setStyleURL(styleURL)
+    }
+
+    @ReactProp(name = "showUserLocation")
+    fun setShowUserLocation(view: MapboxNavigationView, showUserLocation: Boolean) {
+        view.setShowUserLocation(showUserLocation)
+    }
+
+    @ReactProp(name = "markers")
+    fun setMarkers(view: MapboxNavigationView, markers: ReadableArray?) {
+        view.setMarkers(markers)
+    }
+    
+    @ReactProp(name = "polyline")
+    fun setPolyline(view: MapboxNavigationView, polyline: ReadableArray?) {
+        view.setPolyline(polyline)
+    }
+
 }
