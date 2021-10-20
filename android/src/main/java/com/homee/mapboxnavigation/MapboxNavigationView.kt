@@ -1,9 +1,7 @@
 package com.homee.mapboxnavigation
 
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.util.Log
 import android.widget.LinearLayout
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
@@ -15,7 +13,6 @@ import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.locationcomponent.location
 import android.graphics.drawable.Drawable
 import com.mapbox.maps.plugin.compass.compass
-import com.mapbox.maps.plugin.logo.logo
 import java.net.URL
 import android.os.AsyncTask
 import android.os.Handler
@@ -25,8 +22,8 @@ import com.mapbox.maps.*
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.*
 import com.mapbox.maps.plugin.attribution.attribution
+import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
-
 
 class MapboxNavigationView(private val context: ThemedReactContext, private val mCallerContext: ReactApplicationContext): LinearLayout(context.baseContext) {
     private var origin: Point? = null
@@ -55,16 +52,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     init {
         mCallerContext.runOnUiQueueThread {
-            if (navigationToken != null && destination != null) {
-                isNavigation = true
-                Log.w("MapboxNavigationView", " ----- init nav")
-            } else {
-                ResourceOptionsManager.getDefault(mCallerContext, mapToken)
+            ResourceOptionsManager.getDefault(context.baseContext, mapToken!!)
 
-                var mapboxMapView = MapboxNavigationMapView(context, this)
-
-                mapView = mapboxMapView.mapView
-            }
+            val mapboxMapView = MapboxNavigationMapView(context, this)
+            mapView = mapboxMapView.initMap()
 
             mapView?.let { mapView ->
                 mapboxMap = mapView.getMapboxMap()
@@ -79,8 +70,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 pointAnnotationManager = annotationApi?.createPointAnnotationManager(mapView)
             }
 
-            updateMap()
         }
+        updateMap()
     }
 
     private fun updateMap() {
@@ -119,14 +110,22 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             )
         }
 
-        if (isNavigation && userLocatorNavigation != null) {
-            mapView?.location?.locationPuck = LocationPuck2D(
-                topImage = userLocatorNavigation,
-            )
-        }
-
         addPolyline()
         addMarkers()
+        proceedNavigation()
+    }
+
+    private fun proceedNavigation() {
+        if (navigationToken != null
+            && destination != null
+            && mapView != null) {
+            isNavigation = true
+
+            val mapboxNavView = MapboxNavigationNavView(context, navigationToken!!, id, mapView!!)
+            mapboxNavView.initNavigation(userLocatorNavigation)
+            mapboxNavView.shouldSimulateRoute = shouldSimulateRoute
+            mapboxNavView.startNavigation(mapView!!, origin!!, destination!!)
+        }
     }
 
     private fun addPolyline() {
@@ -151,12 +150,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 val newCameraOptions = mapboxMap!!.cameraForCoordinates(points, EdgeInsets(42.0, 32.0, 148.0 + 32.0, 32.0))
                 mapboxMap?.setCamera(newCameraOptions)
             } else {
-                Log.w("MapboxNavigationView", "will delete all polyline")
                 if (polylineAnnotation != null) {
-                    Log.w("MapboxNavigationView", "delete all polyline")
                     Handler(Looper.getMainLooper()).post {
-                        polylineAnnotationManager?.onDestroy()
-                        Log.w("MapboxNavigationView", "delete all polyline done")
+                        polylineAnnotationManager?.deleteAll()
                         polylineAnnotation = null
                     }
                 }
@@ -197,12 +193,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     }
                 }
             } else {
-                Log.w("MapboxNavigationView", "will delete all points")
                 if (pointAnnotation != null) {
-                    Log.w("MapboxNavigationView", "delete all points")
                     Handler(Looper.getMainLooper()).post {
                         pointAnnotationManager?.deleteAll()
-                        Log.w("MapboxNavigationView", "delete all points done")
                         pointAnnotation = null
                     }
                 }
@@ -251,12 +244,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         this.navigationToken = navigationToken
         updateMap()
     }
-    
+
     fun setCamera(camera: ReadableMap) {
         this.camera = camera
         updateMap()
     }
-    
+
     fun setDestinationMarker(destinationMarker: ReadableMap) {
         doAsync {
             val imageUrl = destinationMarker?.getString("uri")
@@ -266,7 +259,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             updateMap()
         }
     }
-    
+
     fun setUserLocatorMap(userLocatorMap: ReadableMap) {
         doAsync {
             val imageUrl = userLocatorMap?.getString("uri")
@@ -276,7 +269,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             updateMap()
         }
     }
-    
+
     fun setUserLocatorNavigation(userLocatorNavigation: ReadableMap) {
         doAsync {
             val imageUrl = userLocatorNavigation?.getString("uri")
@@ -286,22 +279,22 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             updateMap()
         }
     }
-    
+
     fun setStyleURL(styleURL: String) {
         this.styleURL = styleURL
         updateMap()
     }
-    
+
     fun setShowUserLocation(showUserLocation: Boolean) {
         this.showUserLocation = showUserLocation
         updateMap()
     }
-    
+
     fun setMarkers(markers: ReadableArray?) {
         this.markers = markers
         updateMap()
     }
-    
+
     fun setPolyline(polyline: ReadableArray?) {
         this.polyline = polyline
         updateMap()

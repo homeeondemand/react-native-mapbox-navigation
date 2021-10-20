@@ -1,8 +1,6 @@
 package com.homee.mapboxnavigation
 
-import android.content.pm.PackageManager
 import android.util.Log
-import android.widget.LinearLayout
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
@@ -30,17 +28,18 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
 
     override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Map<String, String>>? {
         return MapBuilder.of<String, Map<String, String>>(
-                "onLocationChange", MapBuilder.of("registrationName", "onLocationChange"),
-                "onError", MapBuilder.of("registrationName", "onError"),
-                "onCancelNavigation", MapBuilder.of("registrationName", "onCancelNavigation"),
-                "onArrive", MapBuilder.of("registrationName", "onArrive"),
-                "onRouteProgressChange", MapBuilder.of("registrationName", "onRouteProgressChange"),
-                "onNavigationStarted", MapBuilder.of("registrationName", "onNavigationStarted"),
+            "onLocationChange", MapBuilder.of("registrationName", "onLocationChange"),
+            "onError", MapBuilder.of("registrationName", "onError"),
+            "onCancelNavigation", MapBuilder.of("registrationName", "onCancelNavigation"),
+            "onArrive", MapBuilder.of("registrationName", "onArrive"),
+            "onRouteProgressChange", MapBuilder.of("registrationName", "onRouteProgressChange"),
+            "onNavigationStarted", MapBuilder.of("registrationName", "onNavigationStarted"),
         )
     }
 
     @ReactProp(name = "origin")
     fun setOrigin(view: MapboxNavigationView, sources: ReadableArray?) {
+        Log.w("MapboxNavigationManager origin", sources.toString())
         if (sources == null || sources.toArrayList().filterNotNull().count() == 0) {
             view.setOrigin(null)
             return
@@ -50,6 +49,7 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
 
     @ReactProp(name = "destination")
     fun setDestination(view: MapboxNavigationView, sources: ReadableArray?) {
+        Log.w("MapboxNavigationManager destination", sources.toString())
         if (sources == null || sources.toArrayList().filterNotNull().count() == 0) {
             view.setDestination(null)
             return
@@ -111,7 +111,7 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     fun setMarkers(view: MapboxNavigationView, markers: ReadableArray?) {
         view.setMarkers(markers)
     }
-    
+
     @ReactProp(name = "polyline")
     fun setPolyline(view: MapboxNavigationView, polyline: ReadableArray?) {
         view.setPolyline(polyline)
