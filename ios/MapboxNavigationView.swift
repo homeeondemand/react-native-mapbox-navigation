@@ -206,9 +206,9 @@ class MapboxNavigationView: UIView {
     }
     
     private func embed() {
-        guard origin.count == 2 else { return }
+        guard origin.filter({ $0 != nil }).count == 2 else { return }
         
-        if destination?.count == 2 {
+        if destination?.filter({ $0 != nil }).count == 2 {
             embedding = true
             
             let originWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: CLLocationDegrees(origin[1] as! CGFloat), longitude: CLLocationDegrees(origin[0] as! CGFloat)))
@@ -348,6 +348,19 @@ extension MapboxNavigationView: NavigationViewControllerDelegate {
     }
     
     func navigationViewController(_ navigationViewController: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
+        var maneuvers = progress.remainingSteps.map({ maneuver in
+            return [
+                "distance": maneuver.distance,
+                "turn": (maneuver.maneuverDirection?.rawValue ?? "") as String,
+                "type": maneuver.maneuverType.rawValue,
+                "exitNumber": maneuver.exitIndex,
+                "roadName": (maneuver.names?.first?.description ?? "") as String,
+                "instruction": maneuver.instructions,
+            ]
+        })
+        
+        let nextManeuver = maneuvers.remove(at: 0)
+        
         onLocationChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
         onRouteProgressChange?(["distanceTraveled": progress.distanceTraveled,
                                 "durationRemaining": progress.durationRemaining,
@@ -355,16 +368,8 @@ extension MapboxNavigationView: NavigationViewControllerDelegate {
                                 "expectedTravelTime": progress.route.expectedTravelTime,
                                 "fractionTraveled": progress.fractionTraveled,
                                 "distanceRemaining": progress.distanceRemaining,
-                                "maneuvers": progress.remainingSteps.map({ maneuver in
-                                    return [
-                                        "distance": maneuver.distance,
-                                        "turn": (maneuver.maneuverDirection?.rawValue ?? "") as String,
-                                        "type": maneuver.maneuverType.rawValue,
-                                        "exitNumber": maneuver.exitIndex,
-                                        "roadName": (maneuver.names?.first?.description ?? "") as String,
-                                        "instruction": maneuver.instructions,
-                                    ]
-                                })
+                                "maneuvers": maneuvers,
+                                "nextManeuver": nextManeuver
         ])
         onNavigationStarted?([:])
     }
