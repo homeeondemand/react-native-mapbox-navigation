@@ -24,6 +24,10 @@ import com.mapbox.maps.plugin.annotation.generated.*
 import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
+import com.facebook.react.bridge.ReactContext
+
+
+
 
 class MapboxNavigationView(private val context: ThemedReactContext, private val mCallerContext: ReactApplicationContext): LinearLayout(context.baseContext) {
     private var origin: Point? = null
@@ -54,7 +58,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         mCallerContext.runOnUiQueueThread {
             ResourceOptionsManager.getDefault(context.baseContext, mapToken!!)
 
-            val mapboxMapView = MapboxNavigationMapView(context, this)
+            val mapboxMapView = MapboxNavigationMapView(context, this, id)
             mapView = mapboxMapView.initMap()
 
             mapView?.let { mapView ->

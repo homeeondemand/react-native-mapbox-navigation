@@ -91,15 +91,16 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     private val routeLineView by lazy {
         MapboxRouteLineView(options)
     }
-    private val routesObserver: RoutesObserver = RoutesObserver { routesResult ->
-        val routes = routesResult.routes
-        val routeLines = routes.map { RouteLine(it, null) }
+    private val routesObserver = object : RoutesObserver {
+        override fun onRoutesChanged(routes: List<DirectionsRoute>) {
+            val routeLines = routes.map { RouteLine(it, null) }
 
-        routeLineApi.setRoutes(
-            routeLines
-        ) { value ->
-            mapboxMap?.getStyle()?.apply {
-                routeLineView.renderRouteDrawData(this, value)
+            routeLineApi.setRoutes(
+                routeLines
+            ) { value ->
+                mapboxMap?.getStyle()?.apply {
+                    routeLineView.renderRouteDrawData(this, value)
+                }
             }
         }
     }

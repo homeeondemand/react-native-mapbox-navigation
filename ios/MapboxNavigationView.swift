@@ -62,6 +62,7 @@ class MapboxNavigationView: UIView {
     @objc var onCancelNavigation: RCTDirectEventBlock?
     @objc var onArrive: RCTDirectEventBlock?
     @objc var onNavigationStarted: RCTDirectEventBlock?
+    @objc var onTap: RCTDirectEventBlock?
     
     override init(frame: CGRect) {
         self.embedded = false
@@ -287,6 +288,11 @@ class MapboxNavigationView: UIView {
                     vc.showsSpeedLimits = false
                     vc.delegate = strongSelf
                     
+                    
+                    let tap = UITapGestureRecognizer(target: self, action: #selector(strongSelf.handleTap(_:)))
+                    vc.view.isUserInteractionEnabled = true
+                    vc.view.addGestureRecognizer(tap)
+                    
                     parentVC.addChild(vc)
                     strongSelf.addSubview(vc.view)
                     vc.view.frame = strongSelf.bounds
@@ -299,7 +305,10 @@ class MapboxNavigationView: UIView {
                 strongSelf.embedded = true
             }
         }
-        
+    }
+    
+    @objc func handleTap(_ sender: UITapGestureRecognizer? = nil) {
+        onTap?(["message": ""]);
     }
     
 }
@@ -359,7 +368,10 @@ extension MapboxNavigationView: NavigationViewControllerDelegate {
             ]
         })
         
-        let nextManeuver = maneuvers.remove(at: 0)
+        var nextManeuver: Dictionary = [:] as Dictionary
+        if(maneuvers.count > 0) {
+            nextManeuver = maneuvers.remove(at: 0)
+        }
         
         onLocationChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
         onRouteProgressChange?(["distanceTraveled": progress.distanceTraveled,

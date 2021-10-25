@@ -34,6 +34,7 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
             "onArrive", MapBuilder.of("registrationName", "onArrive"),
             "onRouteProgressChange", MapBuilder.of("registrationName", "onRouteProgressChange"),
             "onNavigationStarted", MapBuilder.of("registrationName", "onNavigationStarted"),
+            "onTap", MapBuilder.of("registrationName", "onTap"),
         )
     }
 

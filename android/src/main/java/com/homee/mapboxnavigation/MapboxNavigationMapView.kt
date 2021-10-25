@@ -1,18 +1,30 @@
 package com.homee.mapboxnavigation
 
 import android.util.Log
+import android.view.MotionEvent
 import android.widget.LinearLayout
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.mapbox.maps.MapView
 import com.mapbox.maps.ResourceOptionsManager
 
-class MapboxNavigationMapView(private val context: ThemedReactContext, private val viewGroup: LinearLayout): MapView(context.baseContext) {
+class MapboxNavigationMapView(private val context: ThemedReactContext, private val viewGroup: LinearLayout, private val viewId: Int): MapView(context.baseContext) {
     var mapView: MapView? = null
 
     fun initMap(): MapView? {
         var layout = inflate(context, R.layout.mapview_layout, viewGroup)
 
         mapView = layout.findViewById(R.id.mapView)
+
+        mapView?.setOnTouchListener(OnTouchListener { view, motionEvent ->
+            if(motionEvent.action == MotionEvent.ACTION_UP) {
+                val event = Arguments.createMap()
+                event.putString("onTap", "")
+                context.getJSModule(RCTEventEmitter::class.java).receiveEvent(viewId, "onTap", event)
+            }
+            false
+        })
 
         return mapView
     }
