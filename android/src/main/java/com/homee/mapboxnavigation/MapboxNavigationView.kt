@@ -41,6 +41,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var userLocatorMap: Drawable? = null
     private var userLocatorNavigation: Drawable? = null
     private var styleURL: String? = null
+    private var transportMode: String = "bike"
     private var showUserLocation = false
     private var markers: ReadableArray? = null
     private var polyline: ReadableArray? = null
@@ -70,6 +71,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 mapView.scalebar?.enabled = false
 
                 val annotationApi = mapView.annotations
+
                 polylineAnnotationManager = annotationApi?.createPolylineAnnotationManager(mapView)
                 pointAnnotationManager = annotationApi?.createPointAnnotationManager(mapView)
             }
@@ -128,7 +130,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             val mapboxNavView = MapboxNavigationNavView(context, navigationToken!!, id, mapView!!)
             mapboxNavView.initNavigation(userLocatorNavigation)
             mapboxNavView.shouldSimulateRoute = shouldSimulateRoute
-            mapboxNavView.startNavigation(mapView!!, origin!!, destination!!)
+            mapboxNavView.startNavigation(mapView!!, origin!!, destination!!, transportMode)
         }
     }
 
@@ -149,17 +151,22 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     .withLineColor("#00AA8D")
                     .withLineWidth(5.0)
 
+                removePolylines()
                 polylineAnnotation = polylineAnnotationManager?.create(polylineAnnotationOptions)
 
                 val newCameraOptions = mapboxMap!!.cameraForCoordinates(points, EdgeInsets(42.0, 32.0, 148.0 + 32.0, 32.0))
                 mapboxMap?.setCamera(newCameraOptions)
             } else {
-                if (polylineAnnotation != null) {
-                    Handler(Looper.getMainLooper()).post {
-                        polylineAnnotationManager?.deleteAll()
-                        polylineAnnotation = null
-                    }
-                }
+                removePolylines()
+            }
+        }
+    }
+
+    private fun removePolylines() {
+        if (polylineAnnotation != null) {
+            Handler(Looper.getMainLooper()).post {
+                polylineAnnotationManager?.deleteAll()
+                polylineAnnotation = null
             }
         }
     }
@@ -242,6 +249,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     fun setMapToken(mapToken: String) {
         this.mapToken = mapToken
         updateMap()
+    }
+
+    fun setTransportMode(transportMode: String?) {
+        if(transportMode != null) {
+            this.transportMode = transportMode
+            updateMap()
+        }
     }
 
     fun setNavigationToken(navigationToken: String) {

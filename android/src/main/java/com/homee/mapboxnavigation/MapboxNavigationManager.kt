@@ -48,6 +48,11 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
         view.setOrigin(Point.fromLngLat(sources.getDouble(0), sources.getDouble(1)))
     }
 
+    @ReactProp(name = "transportMode")
+    fun setTransportMode(view: MapboxNavigationView, transportMode: String?) {
+        view.setTransportMode(transportMode)
+    }
+
     @ReactProp(name = "destination")
     fun setDestination(view: MapboxNavigationView, sources: ReadableArray?) {
         Log.w("MapboxNavigationManager destination", sources.toString())

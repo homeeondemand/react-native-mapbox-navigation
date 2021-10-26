@@ -3,8 +3,6 @@ import MapboxDirections
 import MapboxNavigation
 import MapboxMaps
 
-// adapted from https://pspdfkit.com/blog/2017/native-view-controllers-and-react-native/ and https://github.com/mslabenyak/react-native-mapbox-navigation/blob/master/ios/Mapbox/MapboxNavigationView.swift
-// https://github.com/mapbox/mapbox-maps-ios/blob/main/Apps/Examples/Examples/All%20Examples/RestrictCoordinateBoundsExample.swift
 extension UIView {
     var parentViewController: UIViewController? {
         var parentResponder: UIResponder? = self
@@ -51,6 +49,7 @@ class MapboxNavigationView: UIView {
     @objc var showUserLocation: Bool = false
     @objc var styleURL: NSString = ""
     @objc var mapToken: NSString = ""
+    @objc var transportMode: NSString = "bike"
     @objc var navigationToken: NSString = ""
     @objc var showsEndOfRouteFeedback: Bool = false
     @objc var destinationMarker: NSDictionary?
@@ -100,6 +99,19 @@ class MapboxNavigationView: UIView {
         let imageData = try? Data(contentsOf: imageUrl!)
         
         return UIImage(data: imageData!, scale: scale)!
+    }
+    
+    private func getTransportMode(transportMode: NSString) -> DirectionsProfileIdentifier {
+        switch transportMode {
+        case "moto":
+            return .automobile
+        case "scooter":
+            return .walking
+        case "pedestrian":
+            return .walking
+        default:
+            return .cycling
+        }
     }
     
     private func renderMap() {
@@ -216,6 +228,7 @@ class MapboxNavigationView: UIView {
             let destinationWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: CLLocationDegrees(destination?[1] as! CGFloat), longitude: CLLocationDegrees(destination?[0] as! CGFloat)))
             
             let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint])
+            options.profileIdentifier = getTransportMode(transportMode: transportMode)
             
             UserDefaults.standard.setValue(self.navigationToken, forKey: "MBXAccessToken")
             

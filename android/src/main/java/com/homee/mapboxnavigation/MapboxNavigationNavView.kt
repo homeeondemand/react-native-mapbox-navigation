@@ -21,6 +21,7 @@ import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
+import com.mapbox.maps.extension.style.expressions.dsl.generated.switchCase
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.animation.camera
@@ -91,19 +92,6 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     private val routeLineView by lazy {
         MapboxRouteLineView(options)
     }
-    private val routesObserver = object : RoutesObserver {
-        override fun onRoutesChanged(routes: List<DirectionsRoute>) {
-            val routeLines = routes.map { RouteLine(it, null) }
-
-            routeLineApi.setRoutes(
-                routeLines
-            ) { value ->
-                mapboxMap?.getStyle()?.apply {
-                    routeLineView.renderRouteDrawData(this, value)
-                }
-            }
-        }
-    }
     private val locationObserver = object : LocationObserver {
         override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
             val enhancedLocation = locationMatcherResult.enhancedLocation
@@ -133,6 +121,15 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     }
 
     private val routeProgressObserver = RouteProgressObserver { routeProgress ->
+        val routeLines = listOf(RouteLine(routeProgress.route, null))
+
+        routeLineApi.setRoutes(
+            routeLines
+        ) { value ->
+            mapboxMap?.getStyle()?.apply {
+                routeLineView.renderRouteDrawData(this, value)
+            }
+        }
         routeLineApi.updateWithRouteProgress(routeProgress) { result ->
             mapboxMap?.getStyle()?.apply {
                 routeLineView.renderRouteLineUpdate(this, result)
@@ -231,7 +228,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     }
 
     @SuppressLint("MissingPermission")
-    fun startNavigation(mapView: MapView, origin: Point, destination: Point) {
+    fun startNavigation(mapView: MapView, origin: Point, destination: Point, transportMode: String) {
         mapboxMap = mapView.getMapboxMap()
         mapboxMap?.let {
             viewportDataSource = MapboxNavigationViewportDataSource(mapboxMap!!)
@@ -247,7 +244,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
             .bannerInstructions(true)
             .steps(true)
             .coordinatesList(listOf(origin, destination))
-            .profile(DirectionsCriteria.PROFILE_CYCLING)
+            .profile(getTransportMode(transportMode))
             .build()
 
         mapboxNavigation?.requestRoutes(routeOptions, routesRequestCallback = object : RouterCallback {
@@ -298,7 +295,6 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         mapboxNavigation?.let {
             locationComponent.addOnIndicatorPositionChangedListener(onPositionChangedListener)
             mapboxNavigation!!.registerRouteProgressObserver(routeProgressObserver)
-            mapboxNavigation!!.registerRoutesObserver(routesObserver)
             mapboxNavigation!!.registerLocationObserver(locationObserver)
             mapboxNavigation!!.registerRouteProgressObserver(replayProgressObserver)
         }
@@ -312,9 +308,6 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
             }
             replayProgressObserver?.let {
                 mapboxNavigation?.unregisterRouteProgressObserver(replayProgressObserver!!)
-            }
-            routesObserver?.let {
-                mapboxNavigation?.unregisterRoutesObserver(routesObserver!!)
             }
             locationObserver?.let {
                 mapboxNavigation?.unregisterLocationObserver(locationObserver!!)
@@ -339,6 +332,15 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
                 .build(),
             mapAnimationOptions
         )
+    }
+
+    private fun getTransportMode(transportMode: String): String {
+        return when (transportMode) {
+            "moto" -> DirectionsCriteria.PROFILE_DRIVING
+            "scooter" -> DirectionsCriteria.PROFILE_WALKING
+            "pedestrian" -> DirectionsCriteria.PROFILE_WALKING
+            else -> DirectionsCriteria.PROFILE_CYCLING
+        }
     }
 
     private fun sendEvent(name: String, data: WritableMap) {
