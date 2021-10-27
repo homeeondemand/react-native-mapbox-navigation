@@ -123,16 +123,13 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     private val routeProgressObserver = RouteProgressObserver { routeProgress ->
         val routeLines = listOf(RouteLine(routeProgress.route, null))
 
-        routeLineApi.setRoutes(
-            routeLines
-        ) { value ->
-            mapboxMap?.getStyle()?.apply {
-                routeLineView.renderRouteDrawData(this, value)
+        mapboxMap?.getStyle()?.apply {
+            routeLineApi.updateWithRouteProgress(routeProgress) { result ->
+               routeLineView.renderRouteLineUpdate(this, result)
             }
-        }
-        routeLineApi.updateWithRouteProgress(routeProgress) { result ->
-            mapboxMap?.getStyle()?.apply {
-                routeLineView.renderRouteLineUpdate(this, result)
+
+            routeLineApi.setRoutes(routeLines) { value ->
+                routeLineView.renderRouteDrawData(this, value)
             }
         }
 
@@ -148,37 +145,36 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         viewportDataSource.onRouteProgressChanged(routeProgress)
         viewportDataSource.evaluate()
 
-        val rawManeuvers = maneuverApi.getManeuvers(routeProgress)
+        var maneuvers = Arguments.createArray()
+        if(routeProgress.route != null) {
+            for(leg in routeProgress.route.legs()!!) {
+                for(step in leg.steps()!!) {
+                    var formattedManeuver = Arguments.createMap()
 
-        var maneuvers = Arguments.createArray();
-        var nextManeuver: WritableMap? = null;
-        rawManeuvers?.value?.forEach { maneuver ->
-            var formattedManeuver = Arguments.createMap()
+                    formattedManeuver.putDouble("distance", step.distance() ?: 0.0)
+                    formattedManeuver.putString("turn", step.maneuver().modifier())
+                    formattedManeuver.putString("type", step.maneuver().type())
+                    formattedManeuver.putString("exitNumber", step.maneuver().exit().toString() ?: "")
+                    formattedManeuver.putString("roadName", step.name())
+                    formattedManeuver.putString("instruction", step.maneuver().instruction())
 
-            formattedManeuver.putDouble("distance", maneuver.stepDistance?.distanceRemaining ?: 0.0)
-            formattedManeuver.putString("turn", maneuver.primary.modifier)
-            formattedManeuver.putString("type", maneuver.primary.type)
-            formattedManeuver.putString("exitNumber", maneuver.primary.id)
-            formattedManeuver.putString("roadName", maneuver.primary.text)
-            formattedManeuver.putString("instruction", maneuver.primary.text)
-
-            if (nextManeuver == null) {
-                nextManeuver = formattedManeuver
-            } else {
-                maneuvers.pushMap(formattedManeuver)
+                    maneuvers.pushMap(formattedManeuver)
+                }
             }
         }
 
         val event = Arguments.createMap()
 
+        event.putDouble("stepDistanceRemaining",
+            routeProgress.currentLegProgress?.currentStepProgress?.distanceRemaining?.toDouble() ?: 0.0
+        )
         event.putDouble("distanceTraveled", routeProgress.distanceTraveled.toDouble())
         event.putDouble("durationRemaining", routeProgress.durationRemaining)
         event.putDouble("fractionTraveled", routeProgress.fractionTraveled.toDouble())
         event.putDouble("distanceRemaining", routeProgress.distanceRemaining.toDouble())
         event.putDouble("eta", ((System.currentTimeMillis() / 1000) + routeProgress.durationRemaining))
-        event.putDouble("expectedTravelTime", 0.0)
         event.putArray("maneuvers", maneuvers)
-        event.putMap("nextManeuver", nextManeuver)
+        event.putInt("stepIndex", routeProgress.currentLegProgress?.currentStepProgress?.stepIndex ?: 0)
 
         sendEvent("onRouteProgressChange", event)
     }
@@ -240,7 +236,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         }
 
         val routeOptions = RouteOptions.builder()
-            //.applyDefaultNavigationOptions()
+            .enableRefresh(true)
             .bannerInstructions(true)
             .steps(true)
             .coordinatesList(listOf(origin, destination))
@@ -262,16 +258,9 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
                 viewportDataSource.evaluate()
 
                 mapboxNavigation?.setRoutes(routes, 0)
+                mapboxNavigation?.startTripSession()
 
-
-                mapboxNavigation.run {
-                    mapboxNavigation?.startTripSession()
-                    registerObservers()
-
-                    // update the camera position to account for the new route
-                    //viewportDataSource.onRouteChanged(routes.first())
-                    //viewportDataSource.evaluate()
-                }
+                registerObservers()
 
                 if(shouldSimulateRoute) startSimulation(routes.first())
                 sendEvent("onNavigationStarted", Arguments.createMap())
@@ -337,8 +326,8 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     private fun getTransportMode(transportMode: String): String {
         return when (transportMode) {
             "moto" -> DirectionsCriteria.PROFILE_DRIVING
-            "scooter" -> DirectionsCriteria.PROFILE_WALKING
             "pedestrian" -> DirectionsCriteria.PROFILE_WALKING
+            "scooter" -> DirectionsCriteria.PROFILE_CYCLING
             else -> DirectionsCriteria.PROFILE_CYCLING
         }
     }
@@ -346,66 +335,6 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     private fun sendEvent(name: String, data: WritableMap) {
         context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, name, data)
     }
-
-//    private fun getInitialCameraPosition(): CameraPosition {
-//        return CameraPosition.Builder()
-//            .zoom(15.0)
-//            .build()
-//    }
-
-//     override fun onNavigationFinished() {
-
-//     }
-
-//     override fun onNavigationRunning() {
-
-//     }
-
-//     override fun onNavigationReady(isRunning: Boolean) {
-//         //try {
-// //            print("-------$navigationToken")
-// //            val accessToken = navigationToken
-// //            if (accessToken == null) {
-// //                sendErrorToReact("Mapbox access token is not set")
-// //                return
-// //            }
-// //
-// //            if (origin == null || destination == null) {
-// //                sendErrorToReact("origin and destination are required")
-// //                return
-// //            }
-// //
-// //            if (::navigationMapboxMap.isInitialized) {
-// //                return
-// //            }
-// //
-// //            //if (this.retrieveNavigationMapboxMap() == null) {
-// //            //    sendErrorToReact("retrieveNavigationMapboxMap() is null")
-// //            //    return
-// //            //}
-// //
-// //            //this.navigationMapboxMap = this.retrieveNavigationMapboxMap()!!
-// //
-// //            //this.retrieveMapboxNavigation()?.let { this.mapboxNavigation = it } // this does not work
-// //
-// //            // fetch the route
-// //            val navigationOptions = MapboxNavigation
-// //                .defaultNavigationOptionsBuilder(context, accessToken)
-// //                .isFromNavigationUi(true)
-// //                .build()
-// //            //this.mapboxNavigation = MapboxNavigationProvider.create(navigationOptions)
-// //            //this.mapboxNavigation.requestRoutes(RouteOptions.builder()
-// //            //        .applyDefaultParams()
-// //            //        .accessToken(accessToken)
-// //            //        .coordinates(mutableListOf(origin, destination))
-// //            //        .profile(RouteUrl.PROFILE_DRIVING)
-// //            //        .steps(true)
-// //            //        .voiceInstructions(true)
-// //            //        .build(), routesReqCallback)
-//         //} catch (ex: Exception) {
-// //            sendErrorToReact(ex.toString())
-//         //}
-//     }
 
     fun onFinalDestinationArrival(enableDetailedFeedbackFlowAfterTbt: Boolean, enableArrivalExperienceFeedback: Boolean) {
         //super.onFinalDestinationArrival(this.showsEndOfRouteFeedback, this.showsEndOfRouteFeedback)

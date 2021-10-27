@@ -239,19 +239,18 @@ class MapboxNavigationView: UIView {
                 
                 switch result {
                 case .failure(let error):
-                    print("----- error")
                     print(error.localizedDescription)
                     strongSelf.onError!(["message": error.localizedDescription])
                 case .success(let response):
                     guard response.routes!.count > 0 else {
-                        print("---- succes empty")
                         return
                     }
                     
-                    let navigationService = MapboxNavigationService(routeResponse: response, routeIndex: 0, routeOptions: options, simulating: strongSelf.shouldSimulateRoute ? .always : .never)
+                    let navigationService = MapboxNavigationService(routeResponse: response, routeIndex: 0, routeOptions: options, simulating: strongSelf.shouldSimulateRoute ? .always : .onPoorGPS)
                     navigationService.simulationSpeedMultiplier = 5
                     
                     let navigationOptions = NavigationOptions()
+                    
                     navigationOptions.navigationService = navigationService
                     navigationOptions.bottomBanner = MapboxNavigationBannerView()
                     navigationOptions.topBanner = MapboxNavigationBannerView()
@@ -352,7 +351,6 @@ extension MapboxNavigationView: NavigationMapViewDelegate {
 }
 
 // MARK: - NavigationViewControllerDelegate methods
-
 extension MapboxNavigationView: NavigationViewControllerDelegate {
     
     func navigationViewController(_ navigationViewController: NavigationViewController,
@@ -369,36 +367,6 @@ extension MapboxNavigationView: NavigationViewControllerDelegate {
         pointAnnotationManager.annotations = [finalDestinationAnnotation]
     }
     
-    func navigationViewController(_ navigationViewController: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
-        var maneuvers = progress.remainingSteps.map({ maneuver in
-            return [
-                "distance": maneuver.distance,
-                "turn": (maneuver.maneuverDirection?.rawValue ?? "") as String,
-                "type": maneuver.maneuverType.rawValue,
-                "exitNumber": maneuver.exitIndex,
-                "roadName": (maneuver.names?.first?.description ?? "") as String,
-                "instruction": maneuver.instructions,
-            ]
-        })
-        
-        var nextManeuver: Dictionary = [:] as Dictionary
-        if(maneuvers.count > 0) {
-            nextManeuver = maneuvers.remove(at: 0)
-        }
-        
-        onLocationChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
-        onRouteProgressChange?(["distanceTraveled": progress.distanceTraveled,
-                                "durationRemaining": progress.durationRemaining,
-                                "eta": NSDate().timeIntervalSince1970 + progress.durationRemaining,
-                                "expectedTravelTime": progress.route.expectedTravelTime,
-                                "fractionTraveled": progress.fractionTraveled,
-                                "distanceRemaining": progress.distanceRemaining,
-                                "maneuvers": maneuvers,
-                                "nextManeuver": nextManeuver
-        ])
-        onNavigationStarted?([:])
-    }
-    
     func navigationViewControllerDidDismiss(_ navigationViewController: NavigationViewController, byCanceling canceled: Bool) {
         if (!canceled) {
             return;
@@ -410,5 +378,41 @@ extension MapboxNavigationView: NavigationViewControllerDelegate {
     func navigationViewController(_ navigationViewController: NavigationViewController, didArriveAt waypoint: Waypoint) -> Bool {
         onArrive?(["message": ""]);
         return true;
+    }
+    
+    func navigationViewController(_ navigationViewController: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
+        var maneuvers : [[AnyHashable : Any]] = []
+        if(navigationViewController.route != nil) {
+            for leg in navigationViewController.route!.legs {
+                for step in leg.steps {
+                    maneuvers.append(formatManeuver(maneuver: step))
+                }
+            }
+        }
+        
+        onLocationChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
+        
+        onRouteProgressChange?(["distanceTraveled": progress.distanceTraveled,
+                                "stepDistanceRemaining": progress.currentLegProgress.currentStepProgress.distanceRemaining,
+                                "durationRemaining": progress.durationRemaining,
+                                "eta": NSDate().timeIntervalSince1970 + progress.durationRemaining,
+                                "expectedTravelTime": progress.route.expectedTravelTime,
+                                "fractionTraveled": progress.fractionTraveled,
+                                "distanceRemaining": progress.distanceRemaining,
+                                "maneuvers": maneuvers,
+                                "stepIndex": navigationViewController.navigationService.routeProgress.currentLegProgress.stepIndex,
+        ])
+        onNavigationStarted?([:])
+    }
+    
+    private func formatManeuver(maneuver: RouteStep) -> [AnyHashable : Any] {
+        return [
+            "distance": maneuver.distance,
+            "turn": (maneuver.maneuverDirection?.rawValue ?? "") as String,
+            "type": maneuver.maneuverType.rawValue,
+            "exitNumber": maneuver.exitIndex,
+            "roadName": (maneuver.names?.first?.description ?? "") as String,
+            "instruction": maneuver.instructions,
+        ]
     }
 }
