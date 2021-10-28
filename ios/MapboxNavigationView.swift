@@ -105,10 +105,10 @@ class MapboxNavigationView: UIView {
         switch transportMode {
         case "moto":
             return .automobile
+        case "scooter":
+            return .walking
         case "pedestrian":
             return .walking
-        case "scooter":
-            return .cycling
         default:
             return .cycling
         }
@@ -207,7 +207,7 @@ class MapboxNavigationView: UIView {
                 
                 var pointAnnotation = PointAnnotation(coordinate: CLLocationCoordinate2DMake(marker["latitude"]! as! CLLocationDegrees, marker["longitude"]! as! CLLocationDegrees))
                 
-                pointAnnotation.image = .custom(image: getImage(image: marker["image"] as! NSDictionary), name: "marker" + String(index))
+                pointAnnotation.image = PointAnnotation.Image(image: getImage(image: marker["image"] as! NSDictionary), name: "marker" + String(index))
                 
                 pointAnnotations.append(pointAnnotation)
             }
@@ -336,9 +336,7 @@ extension MapboxNavigationView: NavigationMapViewDelegate {
                            pointAnnotationManager: PointAnnotationManager) {
         var finalDestinationAnnotation = finalDestinationAnnotation
         if let image = UIImage(named: "marker") {
-            finalDestinationAnnotation.image = PointAnnotation.Image.custom(image: image, name: "marker")
-        } else {
-            finalDestinationAnnotation.image = .default
+            finalDestinationAnnotation.image = PointAnnotation.Image(image: image, name: "marker")
         }
         
         // `PointAnnotationManager` is used to manage `PointAnnotation`s and is also exposed as
@@ -362,7 +360,7 @@ extension MapboxNavigationView: NavigationViewControllerDelegate {
         }
         
         var finalDestinationAnnotation = finalDestinationAnnotation
-        finalDestinationAnnotation.image = .custom(image: self.getImage(image: self.destinationMarker!), name: "destination_marker")
+        finalDestinationAnnotation.image = PointAnnotation.Image(image: self.getImage(image: self.destinationMarker!), name: "destination_marker")
         
         pointAnnotationManager.annotations = [finalDestinationAnnotation]
     }
