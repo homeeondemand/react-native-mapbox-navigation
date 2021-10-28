@@ -105,10 +105,10 @@ class MapboxNavigationView: UIView {
         switch transportMode {
         case "moto":
             return .automobile
-        case "scooter":
-            return .walking
         case "pedestrian":
             return .walking
+        case "scooter":
+            return .cycling
         default:
             return .cycling
         }
@@ -400,6 +400,7 @@ extension MapboxNavigationView: NavigationViewControllerDelegate {
                                 "fractionTraveled": progress.fractionTraveled,
                                 "distanceRemaining": progress.distanceRemaining,
                                 "maneuvers": maneuvers,
+                                //"route": navigationViewController.route?.legs.map { $0.shape.coordinates },
                                 "stepIndex": navigationViewController.navigationService.routeProgress.currentLegProgress.stepIndex,
         ])
         onNavigationStarted?([:])
