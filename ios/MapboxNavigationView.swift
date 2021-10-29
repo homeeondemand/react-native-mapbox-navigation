@@ -323,6 +323,14 @@ class MapboxNavigationView: UIView {
         onTap?(["message": ""]);
     }
     
+    func stopNavigation() {
+
+        DispatchQueue.main.async {
+            self.navViewController?.navigationService.stop()
+            self.navViewController?.dismiss(animated: false, completion: {})
+        }
+    }
+    
 }
 
 // MARK: - NavigationMapViewDelegate methods
@@ -398,7 +406,7 @@ extension MapboxNavigationView: NavigationViewControllerDelegate {
                                 "fractionTraveled": progress.fractionTraveled,
                                 "distanceRemaining": progress.distanceRemaining,
                                 "maneuvers": maneuvers,
-                                //"route": navigationViewController.route?.legs.map { $0.shape.coordinates },
+                                "route": navigationViewController.routeResponse.identifier,
                                 "stepIndex": navigationViewController.navigationService.routeProgress.currentLegProgress.stepIndex,
         ])
         onNavigationStarted?([:])

@@ -1,4 +1,5 @@
 #import "React/RCTViewManager.h"
+#import "React/RCTBridgeModule.h"
 
 @interface RCT_EXTERN_MODULE(MapboxNavigationManager, RCTViewManager)
 
@@ -26,5 +27,7 @@ RCT_EXPORT_VIEW_PROPERTY(shouldSimulateRoute, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(showsEndOfRouteFeedback, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(markers, NSArray)
 RCT_EXPORT_VIEW_PROPERTY(polyline, NSArray)
+
+RCT_EXTERN_METHOD(stopNavigation)
 
 @end

@@ -137,10 +137,10 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         // Generate the next maneuver arrow update data and pass it to the view class
         // to visualize the updates on the map.
         //val arrowUpdate = routeArrowApi.addUpcomingManeuverArrow(routeProgress)
-        mapboxMap?.getStyle()?.apply {
-            // Render the result to update the map.
-            //routeArrowView.renderManeuverUpdate(this, arrowUpdate)
-        }
+        //mapboxMap?.getStyle()?.apply {
+        //    // Render the result to update the map.
+        //    routeArrowView.renderManeuverUpdate(this, arrowUpdate)
+        //}
 
         viewportDataSource.onRouteProgressChanged(routeProgress)
         viewportDataSource.evaluate()
@@ -174,6 +174,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         event.putDouble("distanceRemaining", routeProgress.distanceRemaining.toDouble())
         event.putDouble("eta", ((System.currentTimeMillis() / 1000) + routeProgress.durationRemaining))
         event.putArray("maneuvers", maneuvers)
+        event.putString("route", routeLines.get(0).route.geometry())
         event.putInt("stepIndex", routeProgress.currentLegProgress?.currentStepProgress?.stepIndex ?: 0)
 
         sendEvent("onRouteProgressChange", event)
@@ -236,7 +237,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         }
 
         val routeOptions = RouteOptions.builder()
-            .enableRefresh(true)
+            .enableRefresh(transportMode == "moto")
             .bannerInstructions(true)
             .steps(true)
             .coordinatesList(listOf(origin, destination))
@@ -325,7 +326,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
 
     private fun getTransportMode(transportMode: String): String {
         return when (transportMode) {
-            "moto" -> DirectionsCriteria.PROFILE_DRIVING
+            "moto" -> DirectionsCriteria.PROFILE_DRIVING_TRAFFIC
             "pedestrian" -> DirectionsCriteria.PROFILE_WALKING
             "scooter" -> DirectionsCriteria.PROFILE_CYCLING
             else -> DirectionsCriteria.PROFILE_CYCLING

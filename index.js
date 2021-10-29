@@ -1,10 +1,12 @@
 import PropTypes from 'prop-types';
 import * as React from 'react';
-import { requireNativeComponent, StyleSheet, View } from 'react-native';
+import { requireNativeComponent, StyleSheet, NativeModules } from 'react-native';
 
 const MapboxNavigation = (props) => {
   return <RNMapboxNavigation style={styles.flex} {...props} />;
 };
+
+export const MapboxNavigationModule = NativeModules.MapboxNavigationManager
 
 MapboxNavigation.propTypes = {
   origin: PropTypes.array.isRequired,

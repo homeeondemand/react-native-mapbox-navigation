@@ -1,10 +1,18 @@
 @objc(MapboxNavigationManager)
 class MapboxNavigationManager: RCTViewManager {
-  override func view() -> UIView! {
-    return MapboxNavigationView();
-  }
+    var mapView: MapboxNavigationView? = nil
+    
+    override func view() -> UIView! {
+        mapView = MapboxNavigationView()
+        
+        return mapView;
+    }
 
-  override static func requiresMainQueueSetup() -> Bool {
-    return true
-  }
+    override static func requiresMainQueueSetup() -> Bool {
+        return true
+    }
+    
+    @objc func stopNavigation() {
+        mapView?.stopNavigation()
+    }
 }
