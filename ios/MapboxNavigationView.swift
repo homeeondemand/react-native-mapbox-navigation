@@ -219,9 +219,9 @@ class MapboxNavigationView: UIView {
     }
     
     private func embed() {
-        guard origin.filter({ $0 != nil }).count == 2 else { return }
+        guard origin.compactMap({ $0 }).count == 2 else { return }
         
-        if destination?.filter({ $0 != nil }).count == 2 {
+        if destination?.compactMap({ $0 }).count == 2 {
             embedding = true
             
             let originWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: CLLocationDegrees(origin[1] as! CGFloat), longitude: CLLocationDegrees(origin[0] as! CGFloat)))
