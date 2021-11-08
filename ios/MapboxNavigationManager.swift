@@ -1,18 +1,44 @@
+import MapboxCoreNavigation
+import MapboxMaps
+import Foundation
+
 @objc(MapboxNavigationManager)
 class MapboxNavigationManager: RCTViewManager {
-    var mapView: MapboxNavigationView? = nil
+    var mapNavigationView: MapboxNavigationView? = nil
     
     override func view() -> UIView! {
-        mapView = MapboxNavigationView()
+        mapNavigationView = MapboxNavigationView()
         
-        return mapView;
+        return mapNavigationView;
     }
 
     override static func requiresMainQueueSetup() -> Bool {
         return true
     }
     
+    @objc func startNavigation() {
+        mapNavigationView?.startNavigation()
+    }
+    
     @objc func stopNavigation() {
-        mapView?.stopNavigation()
+        mapNavigationView?.stopNavigation()
+    }
+    
+    @objc func setCamera(_ camera:NSDictionary) {
+        if( mapNavigationView?.mapView != nil) {
+            DispatchQueue.main.async {
+                let center = (!(camera.value(forKey: "center") is NSNull) ? camera["center"] : self.mapNavigationView!.camera["center"]) as? Array<Double>
+
+                self.mapNavigationView!.mapView!.mapboxMap.setCamera(
+                    to: CameraOptions(
+                        center:  CLLocationCoordinate2D(
+                            latitude: center![0],
+                            longitude: center![1]
+                        ),
+                        zoom: ((camera.value(forKey: "zoom") ?? self.mapNavigationView!.camera["zoom"]) as! CGFloat)
+                    )
+                )
+            }
+        }
     }
 }
