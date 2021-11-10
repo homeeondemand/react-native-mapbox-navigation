@@ -23,6 +23,7 @@ class MapboxNavigationView: UIView {
     internal var mapView: MapView!
     private var lineAnnotationManager: PolylineAnnotationManager?
     private var pointAnnotationManager: PointAnnotationManager?
+    private var navigationService: MapboxNavigationService?
     
     @objc var origin: NSArray = [] {
         didSet { setNeedsLayout() }
@@ -116,9 +117,13 @@ class MapboxNavigationView: UIView {
             mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!)
         }
         
-        self.setCamera()
-        self.addPolylines()
-        self.addPoints()
+        if(markers.count == 0 && polylines.count == 0) {
+            self.setCamera()
+        } else {
+            self.addPolylines()
+            self.addPoints()
+        }
+        
     }
     
     func setCamera() {
@@ -169,15 +174,11 @@ class MapboxNavigationView: UIView {
             }
             
             lineAnnotationManager.annotations = polylineAnnotations
-
-            let mapCamera = mapView.mapboxMap.camera(for: polylinePoints,
-                                                        padding: .init(top: 42, left: 32, bottom:  (camera["offsetBottom"] as? Bool == true) ? 148 : 42, right: 32),
-                                                  bearing: nil,
-                                                  pitch: nil)
-            mapView.camera.ease(to: mapCamera, duration: 0.5)
         }
         
         self.lineAnnotationManager = lineAnnotationManager
+        
+        updateCameraForAnnotations()
     }
     
     func addPoints() {
@@ -188,7 +189,6 @@ class MapboxNavigationView: UIView {
         }
         
         guard markers.count > 0 else {
-            self.setCamera()
             return
         }
         
@@ -208,13 +208,43 @@ class MapboxNavigationView: UIView {
         let pointAnnotationManager = mapView.annotations.makePointAnnotationManager()
         pointAnnotationManager.annotations = pointAnnotations
 
-        let mapCamera = mapView.mapboxMap.camera(for: pointsCoordinates,
-                                                    padding: .init(top: 42, left: 32, bottom:  (camera["offsetBottom"] as? Bool == true) ? 148 : 42, right: 32),
-                                              bearing: nil,
-                                              pitch: nil)
-        mapView.camera.ease(to: mapCamera, duration: 0.5)
-    
         self.pointAnnotationManager = pointAnnotationManager
+        
+        updateCameraForAnnotations()
+    }
+    
+    func updateCameraForAnnotations() {
+        var pointsCoordinates: [CLLocationCoordinate2D] = []
+
+        if(markers.count > 0) {
+            for (index, m) in markers.enumerated() {
+                if let marker = m as? Dictionary<String, Any> {
+                    let coordinates = CLLocationCoordinate2DMake(marker["latitude"]! as! CLLocationDegrees, marker["longitude"]! as! CLLocationDegrees)
+                    
+                    pointsCoordinates.append(coordinates)
+                
+                }
+            }
+        }
+        
+        if (polylines.count > 0){
+            for polyline in polylines {
+                let coordinates: [[CLLocationDegrees]] = (polyline.value(forKey: "coordinates") ?? []) as! [[CLLocationDegrees]]
+                
+                for coords in coordinates {
+                    let point = CLLocationCoordinate2DMake(coords[0], coords[1])
+                    pointsCoordinates.append(point)
+                }
+            }
+        }
+        
+        guard pointsCoordinates.count > 0 else { return }
+        
+        let mapCamera = mapView.mapboxMap.camera(for: pointsCoordinates,
+                                                         padding: .init(top: (camera["offset"] as? Bool == true) ? 82 : 42, left: 32, bottom:  (camera["offset"] as? Bool == true) ? 168 : 62, right: 32),
+                                              bearing: nil,
+                                              pitch: 1)
+        mapView.camera.ease(to: mapCamera, duration: 0.5)
     }
     
     @objc func handleTap(_ sender: UITapGestureRecognizer? = nil) {
@@ -248,14 +278,14 @@ class MapboxNavigationView: UIView {
                         return
                     }
                     
-                    let navigationService = MapboxNavigationService(routeResponse: response,
+                    strongSelf.navigationService = MapboxNavigationService(routeResponse: response,
                                                                     routeIndex: 0,
                                                                     routeOptions: options,
                                                                     simulating: strongSelf.shouldSimulateRoute ? .always : .never)
-                    navigationService.simulationSpeedMultiplier = 5
+                    strongSelf.navigationService!.simulationSpeedMultiplier = 5
                     
-                    let navigationOptions = NavigationOptions(navigationService: navigationService)
-                    navigationOptions.navigationService = navigationService
+                    let navigationOptions = NavigationOptions(navigationService: strongSelf.navigationService!)
+                    navigationOptions.navigationService = strongSelf.navigationService!
                     navigationOptions.bottomBanner = MapboxNavigationBannerView()
                     navigationOptions.topBanner = MapboxNavigationBannerView()
                     
@@ -332,6 +362,7 @@ class MapboxNavigationView: UIView {
     
     func stopNavigation() {
         DispatchQueue.main.async {
+            self.navigationService?.stop()
             self.navViewController?.didTapCancel("stop")
             self.mapView = nil
             self.setNeedsLayout()
