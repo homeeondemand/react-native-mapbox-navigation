@@ -1,13 +1,11 @@
 package com.homee.mapboxnavigation
 
-import android.util.Log
 import android.view.MotionEvent
 import android.widget.LinearLayout
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.mapbox.maps.MapView
-import com.mapbox.maps.ResourceOptionsManager
 
 class MapboxNavigationMapView(private val context: ThemedReactContext, private val viewGroup: LinearLayout, private val viewId: Int): MapView(context.baseContext) {
     var mapView: MapView? = null

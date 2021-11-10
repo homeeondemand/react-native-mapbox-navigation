@@ -1,6 +1,5 @@
 package com.homee.mapboxnavigation
 
-import android.util.Log
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
@@ -12,13 +11,16 @@ import com.mapbox.geojson.Point
 import javax.annotation.Nonnull
 
 class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : SimpleViewManager<MapboxNavigationView>() {
+    var mapboxNavigationView: MapboxNavigationView? = null
 
     override fun getName(): String {
         return "MapboxNavigation"
     }
 
     public override fun createViewInstance(@Nonnull reactContext: ThemedReactContext): MapboxNavigationView {
-        return MapboxNavigationView(reactContext, mCallerContext)
+        mapboxNavigationView = MapboxNavigationView(reactContext, mCallerContext)
+
+        return mapboxNavigationView as MapboxNavigationView
     }
 
     override fun onDropViewInstance(view: MapboxNavigationView) {
@@ -40,12 +42,11 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
 
     @ReactProp(name = "origin")
     fun setOrigin(view: MapboxNavigationView, sources: ReadableArray?) {
-        Log.w("MapboxNavigationManager origin", sources.toString())
         if (sources == null || sources.toArrayList().filterNotNull().count() == 0) {
             view.setOrigin(null)
             return
         }
-        view.setOrigin(Point.fromLngLat(sources.getDouble(0), sources.getDouble(1)))
+        view.setOrigin(Point.fromLngLat(sources.getDouble(1), sources.getDouble(0)))
     }
 
     @ReactProp(name = "transportMode")
@@ -55,12 +56,11 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
 
     @ReactProp(name = "destination")
     fun setDestination(view: MapboxNavigationView, sources: ReadableArray?) {
-        Log.w("MapboxNavigationManager destination", sources.toString())
         if (sources == null || sources.toArrayList().filterNotNull().count() == 0) {
             view.setDestination(null)
             return
         }
-        view.setDestination(Point.fromLngLat(sources.getDouble(0), sources.getDouble(1)))
+        view.setDestination(Point.fromLngLat(sources.getDouble(1), sources.getDouble(0)))
     }
 
     @ReactProp(name = "shouldSimulateRoute")
@@ -118,9 +118,9 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
         view.setMarkers(markers)
     }
 
-    @ReactProp(name = "polyline")
-    fun setPolyline(view: MapboxNavigationView, polyline: ReadableArray?) {
-        view.setPolyline(polyline)
+    @ReactProp(name = "polylines")
+    fun setPolyline(view: MapboxNavigationView, polylines: ReadableArray?) {
+        view.setPolylines(polylines)
     }
 
 }

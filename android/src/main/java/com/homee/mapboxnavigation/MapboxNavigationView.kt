@@ -24,10 +24,6 @@ import com.mapbox.maps.plugin.annotation.generated.*
 import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
-import com.facebook.react.bridge.ReactContext
-
-
-
 
 class MapboxNavigationView(private val context: ThemedReactContext, private val mCallerContext: ReactApplicationContext): LinearLayout(context.baseContext) {
     private var origin: Point? = null
@@ -44,10 +40,11 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var transportMode: String = "bike"
     private var showUserLocation = false
     private var markers: ReadableArray? = null
-    private var polyline: ReadableArray? = null
+    private var polylines: ReadableArray? = null
 
     private var mapboxMap: MapboxMap? = null
     private var mapView: MapView? = null
+    private var mapboxNavView: MapboxNavigationNavView? = null
 
     private var isNavigation = false
     private var polylineAnnotationManager: PolylineAnnotationManager? = null
@@ -55,7 +52,17 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var pointAnnotation: PointAnnotation? = null
     private var pointAnnotationManager: PointAnnotationManager? = null
 
+    companion object {
+        var instance: MapboxNavigationView? = null
+    }
+
     init {
+        createMap()
+        updateMap()
+        instance = this
+    }
+
+    private fun createMap() {
         mCallerContext.runOnUiQueueThread {
             ResourceOptionsManager.getDefault(context.baseContext, mapToken!!)
 
@@ -65,7 +72,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             mapView?.let { mapView ->
                 mapboxMap = mapView.getMapboxMap()
 
-                mapView.logo?.enabled = false
+                mapView.logo?.marginLeft = 3000.0F
                 mapView.compass?.enabled = false
                 mapView.attribution?.iconColor = Color.TRANSPARENT
                 mapView.scalebar?.enabled = false
@@ -77,7 +84,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             }
 
         }
-        updateMap()
     }
 
     private fun updateMap() {
@@ -94,10 +100,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         if (camera != null) {
             val cameraOptions = CameraOptions.Builder()
                 .center(Point.fromLngLat(
-                    camera!!.getArray("center")!!.getDouble(0),
-                    camera!!.getArray("center")!!.getDouble(1))
+                    camera!!.getArray("center")!!.getDouble(1),
+                    camera!!.getArray("center")!!.getDouble(0))
                 )
-                .zoom(camera!!.getDouble("zoom"))
+                .zoom(if(camera!!.hasKey("zoom")) camera!!.getDouble("zoom") else 15.0)
                 .pitch(0.0)
                 .build()
             mapboxMap?.setCamera(cameraOptions)
@@ -116,46 +122,76 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             )
         }
 
-        addPolyline()
+        addPolylines()
         addMarkers()
-        proceedNavigation()
     }
 
-    private fun proceedNavigation() {
+    fun startNavigation() {
         if (navigationToken != null
             && destination != null
             && mapView != null) {
             isNavigation = true
 
-            val mapboxNavView = MapboxNavigationNavView(context, navigationToken!!, id, mapView!!)
-            mapboxNavView.initNavigation(userLocatorNavigation)
-            mapboxNavView.shouldSimulateRoute = shouldSimulateRoute
-            mapboxNavView.startNavigation(mapView!!, origin!!, destination!!, transportMode)
+            mapboxNavView = MapboxNavigationNavView(context, navigationToken!!, id, mapView!!)
+            mapboxNavView!!.initNavigation(userLocatorNavigation)
+            mapboxNavView!!.shouldSimulateRoute = shouldSimulateRoute
+            mapboxNavView!!.startNavigation(mapView!!, origin!!, destination!!, transportMode)
         }
     }
 
-    private fun addPolyline() {
+    fun stopNavigation() {
+            if (isNavigation && mapboxNavView != null) {
+                isNavigation = false
+
+                mapboxNavView!!.stopNavigation(camera)
+            }
+
+    }
+
+    private fun addPolylines() {
         if (mapView != null) {
-            if (polyline != null) {
-                val points = mutableListOf<Point>()
-                for (i in 0 until polyline!!.size()) {
-                    val polylineArr = polyline!!.getArray(i)!!
-                    val lat = polylineArr.getDouble(0)
-                    val lng = polylineArr.getDouble(1)
-
-                    points.add(Point.fromLngLat(lng, lat))
-                }
-
-                val polylineAnnotationOptions = PolylineAnnotationOptions()
-                    .withPoints(points)
-                    .withLineColor("#00AA8D")
-                    .withLineWidth(5.0)
-
+            if (polylines != null && polylineAnnotationManager != null) {
                 removePolylines()
-                polylineAnnotation = polylineAnnotationManager?.create(polylineAnnotationOptions)
 
-                val newCameraOptions = mapboxMap!!.cameraForCoordinates(points, EdgeInsets(42.0, 32.0, 148.0 + 32.0, 32.0))
-                mapboxMap?.setCamera(newCameraOptions)
+                Handler(Looper.getMainLooper()).post {
+                    val points = mutableListOf<Point>()
+
+                    for (i in 0 until polylines!!.size()) {
+                        val coordinates = mutableListOf<Point>()
+                        val polylineInfo = polylines!!.getMap(i)
+                        val polyline = polylineInfo.getArray("coordinates")
+                        val color = polylineInfo.getString("color")
+
+                        for (j in 0 until polyline!!.size()) {
+                            val polylineArr = polyline!!.getArray(j)!!
+                            val lat = polylineArr.getDouble(0)
+                            val lng = polylineArr.getDouble(1)
+                            val point = Point.fromLngLat(lng, lat)
+
+                            coordinates.add(point)
+                            points.add(point)
+                        }
+
+                        val polylineAnnotationOptions = PolylineAnnotationOptions()
+                            .withPoints(coordinates)
+                            .withLineColor(color ?: "#00AA8D")
+                            .withLineWidth(5.0)
+                        polylineAnnotation =
+                            polylineAnnotationManager!!.create(polylineAnnotationOptions)
+
+                    }
+
+                    val newCameraOptions = mapboxMap!!.cameraForCoordinates(
+                        points,
+                        EdgeInsets(
+                            42.0,
+                            32.0,
+                            if (camera!!.hasKey("offsetBottom") && camera!!.getBoolean("offsetBottom")) 148.0 else 32.0,
+                            32.0
+                        )
+                    )
+                    mapboxMap?.setCamera(newCameraOptions)
+                }
             } else {
                 removePolylines()
             }
@@ -173,8 +209,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     private fun addMarkers() {
         if (mapView != null) {
-            if (markers != null) {
+            if (markers != null && markers!!.size() > 0) {
                 doAsync {
+                    val points = mutableListOf<Point>()
+
                     var i = 0
                     while (i < markers!!.size()) {
                         val marker = markers!!.getMap(i)
@@ -187,21 +225,22 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                             val markerUrl = markerIcon.getString("uri")
                             val inputStream = URL(markerUrl).openStream()
                             val icon = BitmapFactory.decodeStream(inputStream)
+                            val point = Point.fromLngLat(markerLongitude, markerLatitude)
                             val pointAnnotationOptions: PointAnnotationOptions =
                                 PointAnnotationOptions()
-                                    .withPoint(
-                                        Point.fromLngLat(
-                                            markerLongitude,
-                                            markerLatitude
-                                        )
-                                    )
+                                    .withPoint(point)
                                     .withIconImage(icon)
+
+                            points.add(point)
 
                             pointAnnotation = pointAnnotationManager?.create(pointAnnotationOptions)
                         }
 
                         i++
                     }
+
+                    val newCameraOptions = mapboxMap!!.cameraForCoordinates(points, EdgeInsets(42.0, 32.0, if(camera!!.hasKey("offsetBottom") && camera!!.getBoolean("offsetBottom")) 148.0 else 32.0, 32.0))
+                    mapboxMap?.setCamera(newCameraOptions)
                 }
             } else {
                 if (pointAnnotation != null) {
@@ -219,12 +258,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         event.putString("error", error)
         context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onError", event)
     }
-
-    //override fun onDestroy() {
-    //    this.stopNavigation()
-    //    this.mapboxNavigation?.onDestroy()
-    //    super.onDestroy()
-    //}
 
     fun setOrigin(origin: Point?) {
         this.origin = origin
@@ -313,8 +346,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         updateMap()
     }
 
-    fun setPolyline(polyline: ReadableArray?) {
-        this.polyline = polyline
+    fun setPolylines(polylines: ReadableArray?) {
+        this.polylines = polylines
         updateMap()
     }
 

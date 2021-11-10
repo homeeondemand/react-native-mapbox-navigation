@@ -7,8 +7,13 @@ import com.facebook.react.uimanager.ViewManager
 import java.util.*
 
 class MapboxNavigationPackage : ReactPackage {
-    override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        return emptyList()
+    override fun createNativeModules(
+            reactContext: ReactApplicationContext): List<NativeModule> {
+        val modules = ArrayList<NativeModule>()
+
+        modules.add(MapboxNavigationModule(reactContext))
+
+        return modules
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {

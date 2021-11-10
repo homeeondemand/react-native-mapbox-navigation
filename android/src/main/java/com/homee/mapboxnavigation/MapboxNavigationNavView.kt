@@ -1,15 +1,11 @@
 package com.homee.mapboxnavigation
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.location.Location
-import android.util.Log
-import androidx.core.app.ActivityCompat
-import androidx.lifecycle.Transformations.map
 import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
@@ -21,23 +17,18 @@ import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
-import com.mapbox.maps.extension.style.expressions.dsl.generated.switchCase
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
-import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
-import com.mapbox.navigation.base.extensions.coordinates
 import com.mapbox.navigation.base.formatter.DistanceFormatterOptions
 import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.base.route.RouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
 import com.mapbox.navigation.base.route.RouterOrigin
-import com.mapbox.navigation.base.trip.model.RouteProgress
 import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.MapboxNavigationProvider
-import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.core.formatter.MapboxDistanceFormatter
 import com.mapbox.navigation.core.replay.MapboxReplayer
 import com.mapbox.navigation.core.replay.ReplayLocationEngine
@@ -47,19 +38,12 @@ import com.mapbox.navigation.core.trip.session.LocationMatcherResult
 import com.mapbox.navigation.core.trip.session.LocationObserver
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.mapbox.navigation.ui.maneuver.api.MapboxManeuverApi
-import com.mapbox.navigation.ui.maneuver.model.Maneuver
 import com.mapbox.navigation.ui.maps.camera.NavigationCamera
 import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSource
 import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
-import com.mapbox.navigation.ui.maps.route.arrow.api.MapboxRouteArrowApi
-import com.mapbox.navigation.ui.maps.route.arrow.api.MapboxRouteArrowView
-import com.mapbox.navigation.ui.maps.route.arrow.model.RouteArrowOptions
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
-import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
-import com.mapbox.navigation.ui.maps.route.line.model.RouteLine
-import com.mapbox.navigation.ui.maps.route.line.model.RouteLineColorResources
-import com.mapbox.navigation.ui.maps.route.line.model.RouteLineResources
+import com.mapbox.navigation.ui.maps.route.line.model.*
 
 class MapboxNavigationNavView(private val context: ThemedReactContext, private val token: String, private val id: Int, private val mapView: MapView) {
     var mapboxMap: MapboxMap? = null
@@ -270,15 +254,43 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
 
     }
 
-    fun stopNavigation() {
-        mapboxNavigation?.stopTripSession()
-        mapboxNavigation?.setRoutes(listOf())
-
-        if (shouldSimulateRoute) mapboxReplayer.stop()
-
+    fun stopNavigation(camera: ReadableMap?) {
         unregisterObservers()
+        mapboxMap?.getStyle()?.apply {
+            // Render the result to update the map.
+            routeLineApi.clearRouteLine { value ->
+                routeLineView.renderClearRouteLineValue(
+                    this,
+                    value
+                )
+            }
+        }
 
-        MapboxNavigationProvider.destroy()
+        // remove the route reference to change camera position
+        viewportDataSource.clearRouteData()
+        viewportDataSource.evaluate()
+
+        if (shouldSimulateRoute) mapboxReplayer.finish()
+
+        mapboxNavigation!!.setRoutes(listOf())
+        mapboxNavigation?.stopTripSession()
+        mapboxNavigation?.onDestroy()
+
+        if (camera != null) {
+            val mapAnimationOptions = MapAnimationOptions.Builder().duration(1500L).build()
+            mapView?.camera.easeTo(
+                CameraOptions.Builder()
+                    // Centers the camera to the lng/lat specified.
+                    .center(Point.fromLngLat(
+                        camera!!.getArray("center")!!.getDouble(1),
+                        camera!!.getArray("center")!!.getDouble(0)))
+                    .zoom(if(camera!!.hasKey("zoom")) camera!!.getDouble("zoom") else 15.0)
+                    .pitch(0.0)
+                    .padding(EdgeInsets(0.0, 0.0, 0.0, 0.0))
+                    .build(),
+                mapAnimationOptions
+            )
+        }
     }
 
     private fun registerObservers() {
@@ -305,7 +317,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         }
     }
 
-    private fun updateCamera(point: Point, bearing: Double? = null) {
+    private fun updateCamera(point: Point, bearing: Double? = null, pitch: Double? = 45.0) {
         val mapAnimationOptions = MapAnimationOptions.Builder().duration(1500L).build()
         mapView?.camera.easeTo(
             CameraOptions.Builder()
@@ -316,7 +328,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
                 // adjusts the bearing of the camera measured in degrees from true north
                 .bearing(bearing)
                 // adjusts the pitch towards the horizon
-                .pitch(45.0)
+                .pitch(pitch)
                 // specify frame of reference from the center.
                 .padding(EdgeInsets(1000.0, 0.0, 0.0, 0.0))
                 .build(),
@@ -345,7 +357,6 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     }
 
     private fun startSimulation(route: DirectionsRoute) {
-        Log.w("-----", "startSimulation")
         mapboxReplayer.run {
             stop()
             clearEvents()
