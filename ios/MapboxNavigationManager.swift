@@ -27,7 +27,7 @@ class MapboxNavigationManager: RCTViewManager {
     @objc func setCamera(_ camera:NSDictionary) {
         if( mapNavigationView?.mapView != nil) {
             DispatchQueue.main.async {
-                let center = (!(camera.value(forKey: "center") is NSNull) ? camera["center"] : self.mapNavigationView!.camera["center"]) as? Array<Double>
+                let center = (!(camera.value(forKey: "center") is NSNull) && camera.value(forKey: "center") != nil ? camera["center"] : self.mapNavigationView!.camera["center"]) as? Array<Double>
 
                 self.mapNavigationView!.mapView!.mapboxMap.setCamera(
                     to: CameraOptions(
