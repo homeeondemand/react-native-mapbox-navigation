@@ -119,13 +119,12 @@ class MapboxNavigationView: UIView {
             mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!)
         }
         
+        self.addPolylines()
+        self.addPoints()
+        
         if(markers.count == 0 && polylines.count == 0) {
             self.setCamera()
-        } else {
-            self.addPolylines()
-            self.addPoints()
         }
-        
     }
     
     func setCamera() {
@@ -192,20 +191,16 @@ class MapboxNavigationView: UIView {
             mapView.annotations.removeAnnotationManager(withId: self.pointAnnotationManager!.id)
         }
         
-        guard markers.count > 0 else {
-            return
-        }
-        
-        var pointsCoordinates: [CLLocationCoordinate2D] = []
-        for (index, m) in markers.enumerated() {
-            if let marker = m as? Dictionary<String, Any> {
-                let coordinates = CLLocationCoordinate2DMake(marker["latitude"]! as! CLLocationDegrees, marker["longitude"]! as! CLLocationDegrees)
-                var pointAnnotation = PointAnnotation(coordinate: coordinates)
-                
-                pointAnnotation.image = PointAnnotation.Image(image: getImage(image: marker["image"] as! NSDictionary), name: "marker" + String(index))
-                
-                pointsCoordinates.append(coordinates)
-                pointAnnotations.append(pointAnnotation)
+        if (markers.count > 0) {
+            for (index, m) in markers.enumerated() {
+                if let marker = m as? Dictionary<String, Any> {
+                    let coordinates = CLLocationCoordinate2DMake(marker["latitude"]! as! CLLocationDegrees, marker["longitude"]! as! CLLocationDegrees)
+                    var pointAnnotation = PointAnnotation(coordinate: coordinates)
+                    
+                    pointAnnotation.image = PointAnnotation.Image(image: getImage(image: marker["image"] as! NSDictionary), name: "marker" + String(index))
+                    
+                    pointAnnotations.append(pointAnnotation)
+                }
             }
         }
         
@@ -242,7 +237,10 @@ class MapboxNavigationView: UIView {
             }
         }
         
-        guard pointsCoordinates.count > 0 else { return }
+        guard pointsCoordinates.count > 0 else {
+            setCamera()
+            return
+        }
         
         let mapCamera = mapView.mapboxMap.camera(for: pointsCoordinates,
                                                          padding: .init(top: (camera["offset"] as? Bool == true) ? 82 : 42, left: 32, bottom:  (camera["offset"] as? Bool == true) ? 168 : 62, right: 32),
