@@ -161,6 +161,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         val polylineInfo = polylines!!.getMap(i)
                         val polyline = polylineInfo.getArray("coordinates")
                         val color = polylineInfo.getString("color")
+                        val opacity = if(polylineInfo.hasKey("opacity")) polylineInfo.getDouble("opacity") else 1.0
 
                         for (j in 0 until polyline!!.size()) {
                             val polylineArr = polyline!!.getArray(j)!!
@@ -176,6 +177,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                             .withPoints(coordinates)
                             .withLineColor(color ?: "#00AA8D")
                             .withLineWidth(5.0)
+                            .withLineOpacity(opacity)
                         polylineAnnotation =
                             polylineAnnotationManager!!.create(polylineAnnotationOptions)
 
@@ -186,7 +188,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         EdgeInsets(
                             42.0,
                             32.0,
-                            if (camera!!.hasKey("offsetBottom") && camera!!.getBoolean("offsetBottom")) 148.0 else 32.0,
+                            if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 148.0 else 32.0,
                             32.0
                         )
                     )
@@ -239,7 +241,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         i++
                     }
 
-                    val newCameraOptions = mapboxMap!!.cameraForCoordinates(points, EdgeInsets(42.0, 32.0, if(camera!!.hasKey("offsetBottom") && camera!!.getBoolean("offsetBottom")) 148.0 else 32.0, 32.0))
+                    val newCameraOptions = mapboxMap!!.cameraForCoordinates(points, EdgeInsets(42.0, 32.0, if(camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 148.0 else 32.0, 32.0))
                     mapboxMap?.setCamera(newCameraOptions)
                 }
             } else {

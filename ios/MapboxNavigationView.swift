@@ -44,9 +44,11 @@ class MapboxNavigationView: UIView {
     @objc var polylines: [NSDictionary] = [] {
         didSet { setNeedsLayout() }
     }
+    @objc var showUserLocation: Bool = false {
+        didSet { setNeedsLayout() }
+    }
     
     @objc var shouldSimulateRoute: Bool = false
-    @objc var showUserLocation: Bool = false
     @objc var styleURL: NSString = ""
     @objc var mapToken: NSString = ""
     @objc var transportMode: NSString = "bike"
@@ -99,7 +101,7 @@ class MapboxNavigationView: UIView {
             // Add the map.
             self.addSubview(mapView)
         }
-        
+
         if showUserLocation {
             if userLocatorMap != nil {
                 var puck2DConfiguration = Puck2DConfiguration()
@@ -158,6 +160,7 @@ class MapboxNavigationView: UIView {
             for polyline in polylines {
                 let coordinates: [[CLLocationDegrees]] = (polyline.value(forKey: "coordinates") ?? []) as! [[CLLocationDegrees]]
                 let color = (polyline.value(forKey: "color") ?? "#00AA8D") as! String
+                let opacity = (polyline.value(forKey: "opacity") ?? 1.0) as! Double
                 
                 var lineCoordinates: [CLLocationCoordinate2D] = []
                 for coords in coordinates {
@@ -168,6 +171,7 @@ class MapboxNavigationView: UIView {
                 
                 var polylineAnnotation = PolylineAnnotation(lineCoordinates: lineCoordinates)
                 polylineAnnotation.lineColor = StyleColor(hexStringToUIColor(hex: color))
+                polylineAnnotation.lineOpacity = opacity
                 polylineAnnotation.lineWidth = 4.0
                 
                 polylineAnnotations.append(polylineAnnotation)
