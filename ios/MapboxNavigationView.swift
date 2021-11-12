@@ -69,6 +69,7 @@ class MapboxNavigationView: UIView {
     @objc var onArrive: RCTDirectEventBlock?
     @objc var onNavigationStarted: RCTDirectEventBlock?
     @objc var onTap: RCTDirectEventBlock?
+    @objc var onReroute: RCTDirectEventBlock?
     
     override init(frame: CGRect) {
         super.init(frame: frame)

@@ -54,6 +54,16 @@ extension MapboxNavigationView: NavigationViewControllerDelegate {
         return true;
     }
     
+    func navigationViewController(_ navigationViewController: NavigationViewController, willRerouteFrom location: CLLocation?) {
+        onReroute?(["message": "reroute"]);
+        return true;
+    }
+    
+    func navigationViewController(_ navigationViewController: NavigationViewController, didRerouteAlong route: Route) {
+        onReroute?(["message": "done"]);
+        return true
+    }
+    
     func navigationViewController(_ navigationViewController: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
         var maneuvers : [[AnyHashable : Any]] = []
         if(navigationViewController.route != nil) {
