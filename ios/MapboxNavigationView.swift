@@ -34,7 +34,12 @@ class MapboxNavigationView: UIView {
     }
     
     @objc var destination: NSArray? = [] {
-        didSet { setNeedsLayout() }
+        didSet {
+            if(destination?.compactMap({ $0 }).count != 2) {
+                stopNavigation()
+            }
+            setNeedsLayout()
+        }
     }
     
     @objc var markers: NSArray = [] {
