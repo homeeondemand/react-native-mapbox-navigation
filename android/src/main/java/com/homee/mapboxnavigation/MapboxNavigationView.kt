@@ -159,9 +159,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     for (i in 0 until polylines!!.size()) {
                         val coordinates = mutableListOf<Point>()
                         val polylineInfo = polylines!!.getMap(i)
-                        val polyline = polylineInfo.getArray("coordinates")
-                        val color = polylineInfo.getString("color")
-                        val opacity = if(polylineInfo.hasKey("opacity")) polylineInfo.getDouble("opacity") else 1.0
+                        val polyline = polylineInfo!!.getArray("coordinates")
+                        val color = polylineInfo!!.getString("color")
+                        val opacity = if(polylineInfo!!.hasKey("opacity")) polylineInfo!!.getDouble("opacity") else 1.0
 
                         for (j in 0 until polyline!!.size()) {
                             val polylineArr = polyline!!.getArray(j)!!
