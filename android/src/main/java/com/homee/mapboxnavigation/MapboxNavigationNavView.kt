@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.location.Location
+import android.util.Log
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
@@ -34,6 +35,7 @@ import com.mapbox.navigation.core.replay.MapboxReplayer
 import com.mapbox.navigation.core.replay.ReplayLocationEngine
 import com.mapbox.navigation.core.replay.route.ReplayProgressObserver
 import com.mapbox.navigation.core.replay.route.ReplayRouteMapper
+import com.mapbox.navigation.core.reroute.RerouteController
 import com.mapbox.navigation.core.trip.session.LocationMatcherResult
 import com.mapbox.navigation.core.trip.session.LocationObserver
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
@@ -171,6 +173,10 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         }
     }
 
+    private val onRerouteObserver = RerouteController.RerouteStateObserver { rerouteState ->
+        Log.w("MapboxNavigationNavView", rerouteState.toString())
+    }
+
     private val navigationLocationProvider = NavigationLocationProvider()
     private val mapboxReplayer = MapboxReplayer()
     private val replayLocationEngine = ReplayLocationEngine(mapboxReplayer)
@@ -299,6 +305,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
             mapboxNavigation!!.registerRouteProgressObserver(routeProgressObserver)
             mapboxNavigation!!.registerLocationObserver(locationObserver)
             mapboxNavigation!!.registerRouteProgressObserver(replayProgressObserver)
+            mapboxNavigation!!.getRerouteController()?.registerRerouteStateObserver(onRerouteObserver)
         }
     }
 
@@ -313,6 +320,9 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
             }
             locationObserver?.let {
                 mapboxNavigation?.unregisterLocationObserver(locationObserver!!)
+            }
+            onRerouteObserver?.let {
+                mapboxNavigation!!.getRerouteController()?.unregisterRerouteStateObserver(onRerouteObserver)
             }
         }
     }

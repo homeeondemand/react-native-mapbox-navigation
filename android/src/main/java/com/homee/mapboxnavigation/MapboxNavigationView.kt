@@ -17,8 +17,10 @@ import java.net.URL
 import android.os.AsyncTask
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.mapbox.maps.*
+import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.*
 import com.mapbox.maps.plugin.attribution.attribution
@@ -97,17 +99,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private fun customizeMap() {
-        if (camera != null) {
-            val cameraOptions = CameraOptions.Builder()
-                .center(Point.fromLngLat(
-                    camera!!.getArray("center")!!.getDouble(1),
-                    camera!!.getArray("center")!!.getDouble(0))
-                )
-                .zoom(if(camera!!.hasKey("zoom")) camera!!.getDouble("zoom") else 15.0)
-                .pitch(0.0)
-                .build()
-            mapboxMap?.setCamera(cameraOptions)
-        }
+        updateCamera()
 
         if (showUserLocation) {
             mapView?.location?.updateSettings {
@@ -124,6 +116,33 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         addPolylines()
         addMarkers()
+    }
+
+    fun updateCamera() {
+        if (camera != null) {
+            val center = try {
+                Point.fromLngLat(
+                    camera!!.getArray("center")!!.getDouble(1),
+                    camera!!.getArray("center")!!.getDouble(0)
+                )
+            } catch (e: Exception) {
+                mapboxMap?.cameraState?.center
+            }
+
+            val zoom = try {
+                camera!!.getDouble("zoom")
+            } catch (e: Exception) {
+                15.0
+            }
+
+            val cameraOptions = CameraOptions.Builder()
+                .center(center)
+                .zoom(zoom)
+                .pitch(0.0)
+                .build()
+
+            mapboxMap?.setCamera(cameraOptions)
+        }
     }
 
     fun startNavigation() {
@@ -186,9 +205,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     val newCameraOptions = mapboxMap!!.cameraForCoordinates(
                         points,
                         EdgeInsets(
-                            42.0,
+                            if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 62.0 else 42.0,
                             32.0,
-                            if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 148.0 else 32.0,
+                            if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 168.0 else 32.0,
                             32.0
                         )
                     )
@@ -241,7 +260,14 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         i++
                     }
 
-                    val newCameraOptions = mapboxMap!!.cameraForCoordinates(points, EdgeInsets(42.0, 32.0, if(camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 148.0 else 32.0, 32.0))
+                    val newCameraOptions = mapboxMap!!.cameraForCoordinates(
+                        points,
+                        EdgeInsets(
+                            if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 62.0 else 42.0,
+                            32.0,
+                            if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 168.0 else 32.0,
+                            32.0
+                        ))
                     mapboxMap?.setCamera(newCameraOptions)
                 }
             } else {
