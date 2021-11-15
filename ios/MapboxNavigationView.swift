@@ -102,6 +102,10 @@ class MapboxNavigationView: UIView {
             
             mapView = MapView(frame: bounds, mapInitOptions: myMapInitOptions)
             
+            let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+            mapView.isUserInteractionEnabled = true
+            mapView.addGestureRecognizer(tap)
+            
             hideMapInfo(mapView)
             
             // Add the map.
@@ -352,9 +356,6 @@ class MapboxNavigationView: UIView {
                     navigationViewController.showsSpeedLimits = false
                     navigationViewController.delegate = strongSelf
                     
-                    let tap = UITapGestureRecognizer(target: self, action: #selector(strongSelf.handleTap(_:)))
-                    navigationViewController.view.isUserInteractionEnabled = true
-                    navigationViewController.view.addGestureRecognizer(tap)
                     
                     hideMapInfo(navigationViewController.navigationMapView?.mapView)
                     
