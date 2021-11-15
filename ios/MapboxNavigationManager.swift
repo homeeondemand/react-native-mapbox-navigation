@@ -35,7 +35,8 @@ class MapboxNavigationManager: RCTViewManager {
                             latitude: center![0],
                             longitude: center![1]
                         ),
-                        zoom: ((camera.value(forKey: "zoom") ?? self.mapNavigationView!.camera["zoom"]) as! CGFloat)
+                        zoom: ((camera.value(forKey: "zoom") ?? self.mapNavigationView!.camera["zoom"]) as! CGFloat),
+                        pitch: ((camera.value(forKey: "pitch") ?? self.mapNavigationView!.camera["pitch"]) as! CGFloat)
                     ),
                 duration: 0.5)
             }

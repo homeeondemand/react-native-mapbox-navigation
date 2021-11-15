@@ -135,10 +135,16 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 15.0
             }
 
+            val pitch = try {
+                camera!!.getDouble("pitch")
+            } catch (e: Exception) {
+                0.0
+            }
+
             val cameraOptions = CameraOptions.Builder()
                 .center(center)
                 .zoom(zoom)
-                .pitch(0.0)
+                .pitch(pitch)
                 .build()
 
             mapboxMap?.setCamera(cameraOptions)

@@ -147,7 +147,7 @@ class MapboxNavigationView: UIView {
                         longitude: (center as! Array<Double>)[1]
                     ),
                     zoom: camera["zoom"] as? CGFloat,
-                    pitch: 1
+                    pitch: camera["pitch"] as? CGFloat ?? 0
                 )
             )
         }
@@ -255,7 +255,7 @@ class MapboxNavigationView: UIView {
         let mapCamera = mapView.mapboxMap.camera(for: pointsCoordinates,
                                                          padding: .init(top: (camera["offset"] as? Bool == true) ? 82 : 42, left: 32, bottom:  (camera["offset"] as? Bool == true) ? 168 : 62, right: 32),
                                               bearing: nil,
-                                              pitch: 1)
+                                              pitch: camera["pitch"] as? CGFloat ?? 1)
         mapView.camera.ease(to: mapCamera, duration: 0.5)
     }
     
