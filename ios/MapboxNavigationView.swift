@@ -147,7 +147,7 @@ class MapboxNavigationView: UIView {
                         longitude: (center as! Array<Double>)[1]
                     ),
                     zoom: camera["zoom"] as? CGFloat,
-                    pitch: camera["pitch"] as? CGFloat ?? 0
+                    pitch: camera["pitch"] as? CGFloat ?? 0.0
                 )
             )
         }
