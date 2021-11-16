@@ -82,7 +82,9 @@ extension MapboxNavigationView: NavigationViewControllerDelegate {
                                 "fractionTraveled": progress.fractionTraveled,
                                 "distanceRemaining": progress.distanceRemaining,
                                 "maneuvers": maneuvers,
-                                "route": navigationViewController.routeResponse.identifier,
+                                "route": navigationViewController.route?.shape?.coordinates.map { coord in
+                                    return [coord.latitude, coord.longitude]
+                                },
                                 "stepIndex": navigationViewController.navigationService.routeProgress.currentLegProgress.stepIndex,
         ])
         onNavigationStarted?([:])
