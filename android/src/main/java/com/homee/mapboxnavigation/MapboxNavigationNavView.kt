@@ -174,7 +174,16 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     }
 
     private val onRerouteObserver = RerouteController.RerouteStateObserver { rerouteState ->
-        Log.w("MapboxNavigationNavView", rerouteState.toString())
+        Log.w("MapboxNavigationNavView", rerouteState::class.simpleName ?: "")
+        val status = when (rerouteState::class.simpleName) {
+            "FetchingRoute" -> "reroute"
+            "RouteFetched" -> "done"
+            else -> ""
+        }
+        val event = Arguments.createMap()
+        event.putString("message", status)
+
+        sendEvent("onReroute", event)
     }
 
     private val navigationLocationProvider = NavigationLocationProvider()

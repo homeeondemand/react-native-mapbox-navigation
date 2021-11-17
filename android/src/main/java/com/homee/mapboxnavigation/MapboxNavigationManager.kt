@@ -32,7 +32,7 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
         return MapBuilder.of<String, Map<String, String>>(
             "onLocationChange", MapBuilder.of("registrationName", "onLocationChange"),
             "onError", MapBuilder.of("registrationName", "onError"),
-            "onCancelNavigation", MapBuilder.of("registrationName", "onCancelNavigation"),
+            "onReroute", MapBuilder.of("registrationName", "onReroute"),
             "onArrive", MapBuilder.of("registrationName", "onArrive"),
             "onRouteProgressChange", MapBuilder.of("registrationName", "onRouteProgressChange"),
             "onNavigationStarted", MapBuilder.of("registrationName", "onNavigationStarted"),

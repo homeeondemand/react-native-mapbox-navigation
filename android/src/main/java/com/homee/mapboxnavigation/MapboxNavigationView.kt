@@ -15,6 +15,7 @@ import android.graphics.drawable.Drawable
 import com.mapbox.maps.plugin.compass.compass
 import java.net.URL
 import android.os.AsyncTask
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -26,6 +27,7 @@ import com.mapbox.maps.plugin.annotation.generated.*
 import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
+import com.mapbox.navigation.ui.utils.internal.extensions.getBitmap
 
 class MapboxNavigationView(private val context: ThemedReactContext, private val mCallerContext: ReactApplicationContext): LinearLayout(context.baseContext) {
     private var origin: Point? = null
@@ -250,13 +252,15 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
                             val markerIcon = marker.getMap("image")!!
                             val markerUrl = markerIcon.getString("uri")
-                            val inputStream = URL(markerUrl).openStream()
-                            val icon = BitmapFactory.decodeStream(inputStream)
+                            val icon = getDrawableFromUri(markerUrl)
                             val point = Point.fromLngLat(markerLongitude, markerLatitude)
                             val pointAnnotationOptions: PointAnnotationOptions =
                                 PointAnnotationOptions()
                                     .withPoint(point)
-                                    .withIconImage(icon)
+
+                            if (icon !== null) {
+                                pointAnnotationOptions.withIconImage(icon.getBitmap())
+                            }
 
                             points.add(point)
 
@@ -338,8 +342,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     fun setDestinationMarker(destinationMarker: ReadableMap) {
         doAsync {
             val imageUrl = destinationMarker?.getString("uri")
-            val inputStream = URL(imageUrl).openStream()
-            val drawable = Drawable.createFromStream(inputStream, "src")
+            val drawable: Drawable? = getDrawableFromUri(imageUrl)
             this.destinationMarker = drawable
             updateMap()
         }
@@ -348,8 +351,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     fun setUserLocatorMap(userLocatorMap: ReadableMap) {
         doAsync {
             val imageUrl = userLocatorMap?.getString("uri")
-            val inputStream = URL(imageUrl).openStream()
-            val drawable = Drawable.createFromStream(inputStream, "src")
+            val drawable: Drawable? = getDrawableFromUri(imageUrl)
             this.userLocatorMap = drawable
             updateMap()
         }
@@ -358,8 +360,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     fun setUserLocatorNavigation(userLocatorNavigation: ReadableMap) {
         doAsync {
             val imageUrl = userLocatorNavigation?.getString("uri")
-            val inputStream = URL(imageUrl).openStream()
-            val drawable = Drawable.createFromStream(inputStream, "src")
+            val drawable: Drawable? = getDrawableFromUri(imageUrl)
             this.userLocatorNavigation = drawable
             updateMap()
         }
@@ -387,6 +388,26 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun onDropViewInstance() {
         mapView?.onDestroy()
+    }
+
+    private fun getDrawableFromUri(imageUrl: String?): Drawable? {
+        var drawable: Drawable?
+        if (imageUrl?.contains("http") == true) {
+            val inputStream = URL(imageUrl).openStream()
+            drawable = Drawable.createFromStream(inputStream, "src")
+        } else {
+            val resourceId = mCallerContext.resources.getIdentifier(
+                imageUrl,
+                "drawable",
+                mCallerContext.packageName
+            )
+            drawable =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) resources.getDrawable(
+                    resourceId,
+                    mCallerContext.theme
+                ) else resources.getDrawable(resourceId)
+        }
+        return drawable
     }
 
     class doAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
