@@ -1,12 +1,9 @@
 package com.homee.mapboxnavigation
 
+import android.annotation.SuppressLint
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.widget.LinearLayout
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReadableArray
-import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.mapbox.geojson.Point
 import com.mapbox.maps.plugin.LocationPuck2D
@@ -19,6 +16,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.facebook.react.bridge.*
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.mapbox.maps.*
 import com.mapbox.maps.plugin.animation.camera
@@ -46,7 +44,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var markers: ReadableArray? = null
     private var polylines: ReadableArray? = null
 
-    private var mapboxMap: MapboxMap? = null
+    var mapboxMap: MapboxMap? = null
     private var mapView: MapView? = null
     private var mapboxNavView: MapboxNavigationNavView? = null
 
@@ -62,7 +60,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     init {
         createMap()
-        updateMap()
         instance = this
     }
 
@@ -86,7 +83,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 polylineAnnotationManager = annotationApi?.createPolylineAnnotationManager(mapView)
                 pointAnnotationManager = annotationApi?.createPointAnnotationManager(mapView)
             }
-
         }
     }
 
@@ -101,8 +97,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private fun customizeMap() {
-        updateCamera()
-
         if (showUserLocation) {
             mapView?.location?.updateSettings {
                 enabled = true
@@ -116,8 +110,61 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             )
         }
 
-        addPolylines()
-        addMarkers()
+        if (!isNavigation) {
+            addMarkers()
+            addPolylines()
+            fitCameraForAnnotations()
+        }
+    }
+
+    fun fitCameraForAnnotations() {
+        val points = mutableListOf<Point>()
+
+        // add polylines points
+        if (polylines != null) {
+            for (i in 0 until polylines!!.size()) {
+                val polylineInfo = polylines!!.getMap(i)
+                val polyline = polylineInfo!!.getArray("coordinates")
+
+                for (j in 0 until polyline!!.size()) {
+                    val polylineArr = polyline!!.getArray(j)!!
+                    val lat = polylineArr.getDouble(0)
+                    val lng = polylineArr.getDouble(1)
+                    val point = Point.fromLngLat(lng, lat)
+
+                    points.add(point)
+                }
+            }
+        }
+
+        // add markers points
+        if (markers != null) {
+            for (i in 0 until markers!!.size()) {
+                val marker = markers!!.getMap(i)
+
+                if (marker != null) {
+                    val markerLatitude = marker.getDouble("latitude")!!
+                    val markerLongitude = marker.getDouble("longitude")!!
+                    val point = Point.fromLngLat(markerLongitude, markerLatitude)
+
+                    points.add(point)
+                }
+            }
+        }
+
+        if (points.size > 0) {
+            val newCameraOptions = mapboxMap!!.cameraForCoordinates(
+                points,
+                EdgeInsets(
+                    if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 62.0 else 42.0,
+                    72.0,
+                    if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 328.0 else 32.0,
+                    72.0
+                ))
+            mapboxMap?.setCamera(newCameraOptions)
+        } else {
+            updateCamera()
+        }
     }
 
     fun updateCamera() {
@@ -167,28 +214,24 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     fun stopNavigation() {
-            if (isNavigation && mapboxNavView != null) {
-                isNavigation = false
+        if (isNavigation && mapboxNavView != null) {
+            isNavigation = false
 
-                mapboxNavView!!.stopNavigation(camera)
-            }
-
+            mapboxNavView!!.stopNavigation(camera)
+        }
     }
 
     private fun addPolylines() {
-        if (mapView != null) {
-            if (polylines != null && polylineAnnotationManager != null) {
-                removePolylines()
-
-                Handler(Looper.getMainLooper()).post {
-                    val points = mutableListOf<Point>()
-
+        Handler(Looper.getMainLooper()).post {
+            if (mapView != null) {
+                if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
                     for (i in 0 until polylines!!.size()) {
                         val coordinates = mutableListOf<Point>()
                         val polylineInfo = polylines!!.getMap(i)
                         val polyline = polylineInfo!!.getArray("coordinates")
                         val color = polylineInfo!!.getString("color")
-                        val opacity = if(polylineInfo!!.hasKey("opacity")) polylineInfo!!.getDouble("opacity") else 1.0
+                        val opacity =
+                            if (polylineInfo!!.hasKey("opacity")) polylineInfo!!.getDouble("opacity") else 1.0
 
                         for (j in 0 until polyline!!.size()) {
                             val polylineArr = polyline!!.getArray(j)!!
@@ -197,7 +240,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                             val point = Point.fromLngLat(lng, lat)
 
                             coordinates.add(point)
-                            points.add(point)
                         }
 
                         val polylineAnnotationOptions = PolylineAnnotationOptions()
@@ -209,80 +251,47 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                             polylineAnnotationManager!!.create(polylineAnnotationOptions)
 
                     }
-
-                    val newCameraOptions = mapboxMap!!.cameraForCoordinates(
-                        points,
-                        EdgeInsets(
-                            if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 62.0 else 42.0,
-                            32.0,
-                            if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 168.0 else 32.0,
-                            32.0
-                        )
-                    )
-                    mapboxMap?.setCamera(newCameraOptions)
+                } else {
+                    if (polylineAnnotation != null) {
+                        polylineAnnotationManager?.deleteAll()
+                        polylineAnnotation = null
+                    }
                 }
-            } else {
-                removePolylines()
-            }
-        }
-    }
-
-    private fun removePolylines() {
-        if (polylineAnnotation != null) {
-            Handler(Looper.getMainLooper()).post {
-                polylineAnnotationManager?.deleteAll()
-                polylineAnnotation = null
             }
         }
     }
 
     private fun addMarkers() {
-        if (mapView != null) {
-            if (markers != null && markers!!.size() > 0) {
-                doAsync {
-                    val points = mutableListOf<Point>()
+        Handler(Looper.getMainLooper()).post {
+            if (mapView != null) {
+                if (markers != null && markers!!.size() > 0) {
+                    doAsync {
+                        for (i in 0 until markers!!.size()) {
+                            val marker = markers!!.getMap(i)
 
-                    var i = 0
-                    while (i < markers!!.size()) {
-                        val marker = markers!!.getMap(i)
+                            if (marker != null) {
+                                val markerLatitude = marker.getDouble("latitude")!!
+                                val markerLongitude = marker.getDouble("longitude")!!
 
-                        if (marker != null) {
-                            val markerLatitude = marker.getDouble("latitude")!!
-                            val markerLongitude = marker.getDouble("longitude")!!
+                                val markerIcon = marker.getMap("image")!!
+                                val markerUrl = markerIcon.getString("uri")
+                                val icon = getDrawableFromUri(markerUrl)
+                                val point = Point.fromLngLat(markerLongitude, markerLatitude)
+                                val pointAnnotationOptions: PointAnnotationOptions =
+                                    PointAnnotationOptions()
+                                        .withPoint(point)
 
-                            val markerIcon = marker.getMap("image")!!
-                            val markerUrl = markerIcon.getString("uri")
-                            val icon = getDrawableFromUri(markerUrl)
-                            val point = Point.fromLngLat(markerLongitude, markerLatitude)
-                            val pointAnnotationOptions: PointAnnotationOptions =
-                                PointAnnotationOptions()
-                                    .withPoint(point)
+                                if (icon !== null) {
+                                    pointAnnotationOptions.withIconImage(icon.getBitmap())
+                                }
 
-                            if (icon !== null) {
-                                pointAnnotationOptions.withIconImage(icon.getBitmap())
+                                pointAnnotation =
+                                    pointAnnotationManager?.create(pointAnnotationOptions)
                             }
-
-                            points.add(point)
-
-                            pointAnnotation = pointAnnotationManager?.create(pointAnnotationOptions)
                         }
-
-                        i++
                     }
-
-                    val newCameraOptions = mapboxMap!!.cameraForCoordinates(
-                        points,
-                        EdgeInsets(
-                            if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 62.0 else 42.0,
-                            32.0,
-                            if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 168.0 else 32.0,
-                            32.0
-                        ))
-                    mapboxMap?.setCamera(newCameraOptions)
-                }
-            } else {
-                if (pointAnnotation != null) {
-                    Handler(Looper.getMainLooper()).post {
+                } else {
+                    if (pointAnnotation != null) {
                         pointAnnotationManager?.deleteAll()
                         pointAnnotation = null
                     }
@@ -291,30 +300,20 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
     }
 
-    private fun sendErrorToReact(error: String?) {
-        val event = Arguments.createMap()
-        event.putString("error", error)
-        context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onError", event)
-    }
-
     fun setOrigin(origin: Point?) {
         this.origin = origin
-        updateMap()
     }
 
     fun setDestination(destination: Point?) {
         this.destination = destination
-        updateMap()
     }
 
     fun setShouldSimulateRoute(shouldSimulateRoute: Boolean) {
         this.shouldSimulateRoute = shouldSimulateRoute
-        updateMap()
     }
 
     fun setShowsEndOfRouteFeedback(showsEndOfRouteFeedback: Boolean) {
         this.showsEndOfRouteFeedback = showsEndOfRouteFeedback
-        updateMap()
     }
 
     fun setMapToken(mapToken: String) {
@@ -325,17 +324,56 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     fun setTransportMode(transportMode: String?) {
         if(transportMode != null) {
             this.transportMode = transportMode
-            updateMap()
         }
     }
 
     fun setNavigationToken(navigationToken: String) {
         this.navigationToken = navigationToken
-        updateMap()
     }
 
     fun setCamera(camera: ReadableMap) {
-        this.camera = camera
+        val offset = if(camera.hasKey("offset"))
+            camera.getBoolean("offset")
+        else
+            if(this.camera != null && this.camera!!.hasKey("offset"))
+                this.camera!!.getBoolean("offset")
+            else
+                false
+        val center = if(camera.hasKey("center"))
+            camera.getArray("center")
+        else
+            if(this.camera != null && this.camera!!.hasKey("center"))
+                this.camera!!.getArray("center")
+            else
+                null
+        val zoom = if(camera.hasKey("zoom"))
+            camera.getDouble("zoom")
+        else
+            if(this.camera != null && this.camera!!.hasKey("zoom"))
+                this.camera!!.getDouble("zoom")
+            else
+                null
+        val pitch = if(camera.hasKey("pitch"))
+            camera.getDouble("pitch")
+        else
+            if(this.camera != null && this.camera!!.hasKey("pitch"))
+                this.camera!!.getDouble("pitch")
+            else
+                null
+
+        val newCamera = Arguments.createMap()
+        if (center != null) {
+            val centerWritableArray = Arguments.createArray()
+            centerWritableArray.pushDouble(center.getDouble(0))
+            centerWritableArray.pushDouble(center.getDouble(1))
+            newCamera.putArray("center", centerWritableArray)
+        }
+        if (zoom != null) newCamera.putDouble("zoom", zoom)
+        if (pitch != null) newCamera.putDouble("pitch", pitch)
+        newCamera.putBoolean("offset", offset)
+
+        this.camera = newCamera
+
         updateMap()
     }
 
@@ -378,12 +416,16 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setMarkers(markers: ReadableArray?) {
         this.markers = markers
-        updateMap()
     }
 
     fun setPolylines(polylines: ReadableArray?) {
         this.polylines = polylines
-        updateMap()
+        if (
+            (this.polylines != null && this.polylines!!.size() > 0) ||
+            (this.markers != null && this.markers!!.size() > 0)
+        ) {
+            updateMap()
+        }
     }
 
     fun onDropViewInstance() {
@@ -410,6 +452,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         return drawable
     }
 
+    @SuppressLint("NewApi")
     class doAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
         init {
             execute()

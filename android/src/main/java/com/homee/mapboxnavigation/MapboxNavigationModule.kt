@@ -25,8 +25,11 @@ class MapboxNavigationModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun setCamera(camera: ReadableMap) {
-        MapboxNavigationView.instance?.setCamera(camera)
-        MapboxNavigationView.instance?.updateCamera()
+        if (MapboxNavigationView.instance != null && MapboxNavigationView.instance?.mapboxMap != null) {
+            Log.w("MapboxNavigationView MS", camera!!.hasKey("offset").toString())
+            Log.w("MapboxNavigationView MS", MapboxNavigationView.instance?.mapboxMap.toString())
+            MapboxNavigationView.instance?.setCamera(camera)
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package com.homee.mapboxnavigation
 
+import android.util.Log
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
@@ -7,6 +8,7 @@ import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
+import com.facebook.react.uimanager.annotations.ReactPropGroup
 import com.mapbox.geojson.Point
 import javax.annotation.Nonnull
 
@@ -49,11 +51,6 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
         view.setOrigin(Point.fromLngLat(sources.getDouble(1), sources.getDouble(0)))
     }
 
-    @ReactProp(name = "transportMode")
-    fun setTransportMode(view: MapboxNavigationView, transportMode: String?) {
-        view.setTransportMode(transportMode)
-    }
-
     @ReactProp(name = "destination")
     fun setDestination(view: MapboxNavigationView, sources: ReadableArray?) {
         if (sources == null || sources.toArrayList().filterNotNull().count() == 0) {
@@ -71,6 +68,16 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     @ReactProp(name = "showsEndOfRouteFeedback")
     fun setShowsEndOfRouteFeedback(view: MapboxNavigationView, showsEndOfRouteFeedback: Boolean) {
         view.setShowsEndOfRouteFeedback(showsEndOfRouteFeedback)
+    }
+
+    @ReactProp(name = "transportMode")
+    fun setTransportMode(view: MapboxNavigationView, transportMode: String?) {
+        view.setTransportMode(transportMode)
+    }
+
+    @ReactProp(name = "styleURL")
+    fun setStyleURL(view: MapboxNavigationView, styleURL: String) {
+        view.setStyleURL(styleURL)
     }
 
     @ReactProp(name = "mapToken")
@@ -103,10 +110,6 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
         view.setUserLocatorNavigation(userLocatorNavigation)
     }
 
-    @ReactProp(name = "styleURL")
-    fun setStyleURL(view: MapboxNavigationView, styleURL: String) {
-        view.setStyleURL(styleURL)
-    }
 
     @ReactProp(name = "showUserLocation")
     fun setShowUserLocation(view: MapboxNavigationView, showUserLocation: Boolean) {
@@ -122,5 +125,4 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     fun setPolyline(view: MapboxNavigationView, polylines: ReadableArray?) {
         view.setPolylines(polylines)
     }
-
 }
