@@ -1,7 +1,6 @@
 package com.homee.mapboxnavigation
 
 import android.annotation.SuppressLint
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.widget.LinearLayout
 import com.facebook.react.uimanager.ThemedReactContext
@@ -15,11 +14,8 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import com.facebook.react.bridge.*
-import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.mapbox.maps.*
-import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.*
 import com.mapbox.maps.plugin.attribution.attribution
@@ -374,7 +370,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         this.camera = newCamera
 
-        updateMap()
+        updateCamera()
     }
 
     fun setDestinationMarker(destinationMarker: ReadableMap) {

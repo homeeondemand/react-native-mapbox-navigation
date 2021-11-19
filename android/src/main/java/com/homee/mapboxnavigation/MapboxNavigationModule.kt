@@ -1,6 +1,5 @@
 package com.homee.mapboxnavigation
 
-import android.util.Log
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
@@ -26,8 +25,6 @@ class MapboxNavigationModule(reactContext: ReactApplicationContext) :
     @ReactMethod
     fun setCamera(camera: ReadableMap) {
         if (MapboxNavigationView.instance != null && MapboxNavigationView.instance?.mapboxMap != null) {
-            Log.w("MapboxNavigationView MS", camera!!.hasKey("offset").toString())
-            Log.w("MapboxNavigationView MS", MapboxNavigationView.instance?.mapboxMap.toString())
             MapboxNavigationView.instance?.setCamera(camera)
         }
     }
