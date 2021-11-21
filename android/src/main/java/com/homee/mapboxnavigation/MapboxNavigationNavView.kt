@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.location.Location
-import android.util.Log
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
@@ -48,14 +47,14 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.*
 
 class MapboxNavigationNavView(private val context: ThemedReactContext, private val token: String, private val id: Int, private val mapView: MapView) {
-    var mapboxMap: MapboxMap? = null
+    private var mapboxMap: MapboxMap? = null
     var mapboxNavigation: MapboxNavigation? = null
     var shouldSimulateRoute: Boolean = false
 
     private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
     private lateinit var navigationCamera: NavigationCamera
     private val routeLineResources: RouteLineResources by lazy {
-        var routeLineColorResources = RouteLineColorResources
+        val routeLineColorResources = RouteLineColorResources
             .Builder()
             .routeDefaultColor(Color.parseColor("#00AA8D"))
             .routeCasingColor(Color.parseColor("#00AA8D"))
@@ -131,21 +130,19 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         viewportDataSource.onRouteProgressChanged(routeProgress)
         viewportDataSource.evaluate()
 
-        var maneuvers = Arguments.createArray()
-        if(routeProgress.route != null) {
-            for(leg in routeProgress.route.legs()!!) {
-                for(step in leg.steps()!!) {
-                    var formattedManeuver = Arguments.createMap()
+        val maneuvers = Arguments.createArray()
+        for(leg in routeProgress.route.legs()!!) {
+            for(step in leg.steps()!!) {
+                val formattedManeuver = Arguments.createMap()
 
-                    formattedManeuver.putDouble("distance", step.distance() ?: 0.0)
-                    formattedManeuver.putString("turn", step.maneuver().modifier())
-                    formattedManeuver.putString("type", step.maneuver().type())
-                    formattedManeuver.putString("exitNumber", step.maneuver().exit().toString() ?: "")
-                    formattedManeuver.putString("roadName", step.name())
-                    formattedManeuver.putString("instruction", step.maneuver().instruction())
+                formattedManeuver.putDouble("distance", step.distance())
+                formattedManeuver.putString("turn", step.maneuver().modifier())
+                formattedManeuver.putString("type", step.maneuver().type())
+                formattedManeuver.putString("exitNumber", step.maneuver().exit().toString())
+                formattedManeuver.putString("roadName", step.name())
+                formattedManeuver.putString("instruction", step.maneuver().instruction())
 
-                    maneuvers.pushMap(formattedManeuver)
-                }
+                maneuvers.pushMap(formattedManeuver)
             }
         }
 
@@ -160,7 +157,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         event.putDouble("distanceRemaining", routeProgress.distanceRemaining.toDouble())
         event.putDouble("eta", ((System.currentTimeMillis() / 1000) + routeProgress.durationRemaining))
         event.putArray("maneuvers", maneuvers)
-        event.putString("route", routeLines.get(0).route.geometry())
+        event.putString("route", routeLines[0].route.geometry())
         event.putInt("stepIndex", routeProgress.currentLegProgress?.currentStepProgress?.stepIndex ?: 0)
 
         sendEvent("onRouteProgressChange", event)
@@ -174,7 +171,6 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     }
 
     private val onRerouteObserver = RerouteController.RerouteStateObserver { rerouteState ->
-        Log.w("MapboxNavigationNavView", rerouteState::class.simpleName ?: "")
         val status = when (rerouteState::class.simpleName) {
             "FetchingRoute" -> "reroute"
             "RouteFetched" -> "done"
@@ -182,7 +178,6 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
         }
         val event = Arguments.createMap()
         event.putString("message", status)
-
         sendEvent("onReroute", event)
     }
 
@@ -191,14 +186,14 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     private val replayLocationEngine = ReplayLocationEngine(mapboxReplayer)
     private val replayProgressObserver = ReplayProgressObserver(mapboxReplayer)
     private val locationComponent by lazy {
-        mapView?.location.apply {
+        mapView.location.apply {
             setLocationProvider(navigationLocationProvider)
             enabled = true
         }
     }
 
     fun initNavigation (userLocatorNavigation: Drawable?): MapboxNavigation? {
-        mapView!!.location.apply {
+        mapView.location.apply {
             setLocationProvider(navigationLocationProvider)
 
             if (userLocatorNavigation != null) {
@@ -240,7 +235,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
             .bannerInstructions(true)
             .steps(true)
             .coordinatesList(listOf(origin, destination))
-            .profile(getTransportMode(transportMode))
+            .profile(DirectionsCriteria.PROFILE_WALKING)
             .build()
 
         mapboxNavigation?.requestRoutes(routeOptions, routesRequestCallback = object : RouterCallback {
@@ -262,11 +257,12 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
 
                 registerObservers()
 
-                if(shouldSimulateRoute) startSimulation(routes.first())
                 sendEvent("onNavigationStarted", Arguments.createMap())
+
+                if(shouldSimulateRoute) startSimulation(routes.first())
+
             }
         })
-
     }
 
     fun stopNavigation(camera: ReadableMap?) {
@@ -293,13 +289,13 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
 
         if (camera != null) {
             val mapAnimationOptions = MapAnimationOptions.Builder().duration(1500L).build()
-            mapView?.camera.easeTo(
+            mapView.camera.easeTo(
                 CameraOptions.Builder()
                     // Centers the camera to the lng/lat specified.
                     .center(Point.fromLngLat(
-                        camera!!.getArray("center")!!.getDouble(1),
-                        camera!!.getArray("center")!!.getDouble(0)))
-                    .zoom(if(camera!!.hasKey("zoom")) camera!!.getDouble("zoom") else 15.0)
+                        camera.getArray("center")!!.getDouble(1),
+                        camera.getArray("center")!!.getDouble(0)))
+                    .zoom(if(camera.hasKey("zoom")) camera.getDouble("zoom") else 15.0)
                     .pitch(0.0)
                     .padding(EdgeInsets(0.0, 0.0, 0.0, 0.0))
                     .build(),
@@ -321,16 +317,16 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
     private fun unregisterObservers() {
         mapboxNavigation?.let {
             locationComponent.removeOnIndicatorPositionChangedListener(onPositionChangedListener)
-            routeProgressObserver?.let {
-                mapboxNavigation?.unregisterRouteProgressObserver(routeProgressObserver!!)
+            routeProgressObserver.let {
+                mapboxNavigation?.unregisterRouteProgressObserver(routeProgressObserver)
             }
-            replayProgressObserver?.let {
-                mapboxNavigation?.unregisterRouteProgressObserver(replayProgressObserver!!)
+            replayProgressObserver.let {
+                mapboxNavigation?.unregisterRouteProgressObserver(replayProgressObserver)
             }
-            locationObserver?.let {
-                mapboxNavigation?.unregisterLocationObserver(locationObserver!!)
+            locationObserver.let {
+                mapboxNavigation?.unregisterLocationObserver(locationObserver)
             }
-            onRerouteObserver?.let {
+            onRerouteObserver.let {
                 mapboxNavigation!!.getRerouteController()?.unregisterRerouteStateObserver(onRerouteObserver)
             }
         }
@@ -338,7 +334,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
 
     private fun updateCamera(point: Point, bearing: Double? = null, pitch: Double? = 45.0) {
         val mapAnimationOptions = MapAnimationOptions.Builder().duration(1500L).build()
-        mapView?.camera.easeTo(
+        mapView.camera.easeTo(
             CameraOptions.Builder()
                 // Centers the camera to the lng/lat specified.
                 .center(point)
@@ -366,13 +362,6 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
 
     private fun sendEvent(name: String, data: WritableMap) {
         context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, name, data)
-    }
-
-    fun onFinalDestinationArrival(enableDetailedFeedbackFlowAfterTbt: Boolean, enableArrivalExperienceFeedback: Boolean) {
-        //super.onFinalDestinationArrival(this.showsEndOfRouteFeedback, this.showsEndOfRouteFeedback)
-        val event = Arguments.createMap()
-        event.putString("onArrive", "")
-        context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onArrive", event)
     }
 
     private fun startSimulation(route: DirectionsRoute) {

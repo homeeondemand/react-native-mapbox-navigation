@@ -93,7 +93,7 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
-    implementation "com.mapbox.navigation:android:2.0.0-rc.4"
+    implementation "com.mapbox.navigation:android:2.0.0"
     implementation 'com.mapbox.maps:android:10.0.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.7.2'
     implementation 'com.squareup.okhttp3:okhttp:4.7.2'

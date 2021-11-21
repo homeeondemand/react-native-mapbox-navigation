@@ -11,10 +11,11 @@ import android.graphics.drawable.Drawable
 import com.mapbox.maps.plugin.compass.compass
 import java.net.URL
 import android.os.AsyncTask
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.view.MotionEvent
 import com.facebook.react.bridge.*
+import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.mapbox.maps.*
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.*
@@ -23,6 +24,7 @@ import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
 import com.mapbox.navigation.ui.utils.internal.extensions.getBitmap
 
+@SuppressLint("ViewConstructor")
 class MapboxNavigationView(private val context: ThemedReactContext, private val mCallerContext: ReactApplicationContext): LinearLayout(context.baseContext) {
     private var origin: Point? = null
     private var destination: Point? = null
@@ -55,31 +57,40 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     init {
-        createMap()
         instance = this
     }
 
-    private fun createMap() {
-        mCallerContext.runOnUiQueueThread {
-            ResourceOptionsManager.getDefault(context.baseContext, mapToken!!)
+    @SuppressLint("ClickableViewAccessibility")
+    fun createMap() {
+        ResourceOptionsManager.getDefault(context.baseContext, mapToken!!)
+        val layout = inflate(context, R.layout.mapview_layout, this)
 
-            val mapboxMapView = MapboxNavigationMapView(context, this, id)
-            mapView = mapboxMapView.initMap()
+        mapView = layout.findViewById(R.id.mapView)
 
-            mapView?.let { mapView ->
-                mapboxMap = mapView.getMapboxMap()
-
-                mapView.logo?.marginLeft = 3000.0F
-                mapView.compass?.enabled = false
-                mapView.attribution?.iconColor = Color.TRANSPARENT
-                mapView.scalebar?.enabled = false
-
-                val annotationApi = mapView.annotations
-
-                polylineAnnotationManager = annotationApi?.createPolylineAnnotationManager(mapView)
-                pointAnnotationManager = annotationApi?.createPointAnnotationManager(mapView)
+        mapView?.setOnTouchListener { _, motionEvent ->
+            if(motionEvent.action == MotionEvent.ACTION_UP) {
+                val event = Arguments.createMap()
+                event.putString("onTap", "")
+                context.getJSModule(RCTEventEmitter::class.java).receiveEvent(this.id, "onTap", event)
             }
+            false
         }
+
+        mapView?.let { mapView ->
+            mapboxMap = mapView.getMapboxMap()
+
+            mapView.logo.marginLeft = 3000.0F
+            mapView.compass.enabled = false
+            mapView.attribution.iconColor = Color.TRANSPARENT
+            mapView.scalebar.enabled = false
+
+            val annotationApi = mapView.annotations
+
+            polylineAnnotationManager = annotationApi.createPolylineAnnotationManager(mapView)
+            pointAnnotationManager = annotationApi.createPointAnnotationManager(mapView)
+        }
+
+        updateMap()
     }
 
     private fun updateMap() {
@@ -113,17 +124,17 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
     }
 
-    fun fitCameraForAnnotations() {
+    private fun fitCameraForAnnotations() {
         val points = mutableListOf<Point>()
 
         // add polylines points
         if (polylines != null) {
             for (i in 0 until polylines!!.size()) {
                 val polylineInfo = polylines!!.getMap(i)
-                val polyline = polylineInfo!!.getArray("coordinates")
+                val polyline = polylineInfo.getArray("coordinates")
 
                 for (j in 0 until polyline!!.size()) {
-                    val polylineArr = polyline!!.getArray(j)!!
+                    val polylineArr = polyline.getArray(j)
                     val lat = polylineArr.getDouble(0)
                     val lng = polylineArr.getDouble(1)
                     val point = Point.fromLngLat(lng, lat)
@@ -137,14 +148,11 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         if (markers != null) {
             for (i in 0 until markers!!.size()) {
                 val marker = markers!!.getMap(i)
+                val markerLatitude = marker.getDouble("latitude")
+                val markerLongitude = marker.getDouble("longitude")
+                val point = Point.fromLngLat(markerLongitude, markerLatitude)
 
-                if (marker != null) {
-                    val markerLatitude = marker.getDouble("latitude")!!
-                    val markerLongitude = marker.getDouble("longitude")!!
-                    val point = Point.fromLngLat(markerLongitude, markerLatitude)
-
-                    points.add(point)
-                }
+                points.add(point)
             }
         }
 
@@ -163,7 +171,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
     }
 
-    fun updateCamera() {
+    private fun updateCamera() {
         if (camera != null) {
             val center = try {
                 Point.fromLngLat(
@@ -197,15 +205,18 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     fun startNavigation() {
-        if (navigationToken != null
-            && destination != null
-            && mapView != null) {
-            isNavigation = true
+        Handler(Looper.getMainLooper()).post {
+            if (navigationToken != null
+                && destination != null
+                && mapView != null
+            ) {
+                isNavigation = true
 
-            mapboxNavView = MapboxNavigationNavView(context, navigationToken!!, id, mapView!!)
-            mapboxNavView!!.initNavigation(userLocatorNavigation)
-            mapboxNavView!!.shouldSimulateRoute = shouldSimulateRoute
-            mapboxNavView!!.startNavigation(mapView!!, origin!!, destination!!, transportMode)
+                mapboxNavView = MapboxNavigationNavView(context, navigationToken!!, id, mapView!!)
+                mapboxNavView!!.initNavigation(userLocatorNavigation)
+                mapboxNavView!!.shouldSimulateRoute = shouldSimulateRoute
+                mapboxNavView!!.startNavigation(mapView!!, origin!!, destination!!, transportMode)
+            }
         }
     }
 
@@ -224,13 +235,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     for (i in 0 until polylines!!.size()) {
                         val coordinates = mutableListOf<Point>()
                         val polylineInfo = polylines!!.getMap(i)
-                        val polyline = polylineInfo!!.getArray("coordinates")
-                        val color = polylineInfo!!.getString("color")
+                        val polyline = polylineInfo.getArray("coordinates")
+                        val color = polylineInfo.getString("color")
                         val opacity =
-                            if (polylineInfo!!.hasKey("opacity")) polylineInfo!!.getDouble("opacity") else 1.0
+                            if (polylineInfo.hasKey("opacity")) polylineInfo.getDouble("opacity") else 1.0
 
                         for (j in 0 until polyline!!.size()) {
-                            val polylineArr = polyline!!.getArray(j)!!
+                            val polylineArr = polyline.getArray(j)
                             val lat = polylineArr.getDouble(0)
                             val lng = polylineArr.getDouble(1)
                             val point = Point.fromLngLat(lng, lat)
@@ -261,29 +272,26 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         Handler(Looper.getMainLooper()).post {
             if (mapView != null) {
                 if (markers != null && markers!!.size() > 0) {
-                    doAsync {
+                    DoAsync {
                         for (i in 0 until markers!!.size()) {
                             val marker = markers!!.getMap(i)
 
-                            if (marker != null) {
-                                val markerLatitude = marker.getDouble("latitude")!!
-                                val markerLongitude = marker.getDouble("longitude")!!
+                            val markerLatitude = marker.getDouble("latitude")
+                            val markerLongitude = marker.getDouble("longitude")
 
-                                val markerIcon = marker.getMap("image")!!
-                                val markerUrl = markerIcon.getString("uri")
-                                val icon = getDrawableFromUri(markerUrl)
-                                val point = Point.fromLngLat(markerLongitude, markerLatitude)
-                                val pointAnnotationOptions: PointAnnotationOptions =
-                                    PointAnnotationOptions()
-                                        .withPoint(point)
+                            val markerIcon = marker.getMap("image")!!
+                            val markerUrl = markerIcon.getString("uri") ?: return@DoAsync
+                            val icon = getDrawableFromUri(markerUrl)
+                            val point = Point.fromLngLat(markerLongitude, markerLatitude)
+                            val pointAnnotationOptions: PointAnnotationOptions =
+                                PointAnnotationOptions()
+                                    .withPoint(point)
 
-                                if (icon !== null) {
-                                    pointAnnotationOptions.withIconImage(icon.getBitmap())
-                                }
-
-                                pointAnnotation =
-                                    pointAnnotationManager?.create(pointAnnotationOptions)
+                            if (icon !== null) {
+                                pointAnnotationOptions.withIconImage(icon.getBitmap())
                             }
+
+                            pointAnnotation = pointAnnotationManager?.create(pointAnnotationOptions)
                         }
                     }
                 } else {
@@ -374,8 +382,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     fun setDestinationMarker(destinationMarker: ReadableMap) {
-        doAsync {
-            val imageUrl = destinationMarker?.getString("uri")
+        DoAsync {
+            val imageUrl = destinationMarker.getString("uri")
             val drawable: Drawable? = getDrawableFromUri(imageUrl)
             this.destinationMarker = drawable
             updateMap()
@@ -383,8 +391,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     fun setUserLocatorMap(userLocatorMap: ReadableMap) {
-        doAsync {
-            val imageUrl = userLocatorMap?.getString("uri")
+        DoAsync {
+            val imageUrl = userLocatorMap.getString("uri")
             val drawable: Drawable? = getDrawableFromUri(imageUrl)
             this.userLocatorMap = drawable
             updateMap()
@@ -392,8 +400,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     fun setUserLocatorNavigation(userLocatorNavigation: ReadableMap) {
-        doAsync {
-            val imageUrl = userLocatorNavigation?.getString("uri")
+        DoAsync {
+            val imageUrl = userLocatorNavigation.getString("uri")
             val drawable: Drawable? = getDrawableFromUri(imageUrl)
             this.userLocatorNavigation = drawable
             updateMap()
@@ -416,40 +424,35 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setPolylines(polylines: ReadableArray?) {
         this.polylines = polylines
-        if (
-            (this.polylines != null && this.polylines!!.size() > 0) ||
-            (this.markers != null && this.markers!!.size() > 0)
-        ) {
-            updateMap()
-        }
+        updateMap()
     }
 
     fun onDropViewInstance() {
         mapView?.onDestroy()
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     private fun getDrawableFromUri(imageUrl: String?): Drawable? {
-        var drawable: Drawable?
-        if (imageUrl?.contains("http") == true) {
+        val drawable = if (imageUrl?.contains("http") == true) {
             val inputStream = URL(imageUrl).openStream()
-            drawable = Drawable.createFromStream(inputStream, "src")
+            Drawable.createFromStream(inputStream, "src")
         } else {
             val resourceId = mCallerContext.resources.getIdentifier(
                 imageUrl,
                 "drawable",
                 mCallerContext.packageName
             )
-            drawable =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) resources.getDrawable(
-                    resourceId,
-                    mCallerContext.theme
-                ) else resources.getDrawable(resourceId)
+            resources.getDrawable(
+                resourceId,
+                mCallerContext.theme
+            )
         }
+
         return drawable
     }
 
     @SuppressLint("NewApi")
-    class doAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
+    class DoAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
         init {
             execute()
         }

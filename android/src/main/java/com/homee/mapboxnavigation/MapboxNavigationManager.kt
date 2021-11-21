@@ -10,17 +10,13 @@ import com.facebook.react.uimanager.annotations.ReactProp
 import com.mapbox.geojson.Point
 import javax.annotation.Nonnull
 
-class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : SimpleViewManager<MapboxNavigationView>() {
-    var mapboxNavigationView: MapboxNavigationView? = null
-
+class MapboxNavigationManager(private var mCallerContext: ReactApplicationContext) : SimpleViewManager<MapboxNavigationView>() {
     override fun getName(): String {
         return "MapboxNavigation"
     }
 
     public override fun createViewInstance(@Nonnull reactContext: ThemedReactContext): MapboxNavigationView {
-        mapboxNavigationView = MapboxNavigationView(reactContext, mCallerContext)
-
-        return mapboxNavigationView as MapboxNavigationView
+        return MapboxNavigationView(reactContext, mCallerContext)
     }
 
     override fun onDropViewInstance(view: MapboxNavigationView) {
@@ -29,7 +25,7 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     }
 
     override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Map<String, String>>? {
-        return MapBuilder.of<String, Map<String, String>>(
+        return MapBuilder.of(
             "onLocationChange", MapBuilder.of("registrationName", "onLocationChange"),
             "onError", MapBuilder.of("registrationName", "onError"),
             "onReroute", MapBuilder.of("registrationName", "onReroute"),
@@ -38,6 +34,17 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
             "onNavigationStarted", MapBuilder.of("registrationName", "onNavigationStarted"),
             "onTap", MapBuilder.of("registrationName", "onTap"),
         )
+    }
+
+    @ReactProp(name = "mapToken")
+    fun setMapToken(view: MapboxNavigationView, mapToken: String) {
+        view.setMapToken(mapToken)
+        view.createMap()
+    }
+
+    @ReactProp(name = "navigationToken")
+    fun setNavigationToken(view: MapboxNavigationView, navigationToken: String) {
+        view.setNavigationToken(navigationToken)
     }
 
     @ReactProp(name = "origin")
@@ -76,16 +83,6 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     @ReactProp(name = "styleURL")
     fun setStyleURL(view: MapboxNavigationView, styleURL: String) {
         view.setStyleURL(styleURL)
-    }
-
-    @ReactProp(name = "mapToken")
-    fun setMapToken(view: MapboxNavigationView, mapToken: String) {
-        view.setMapToken(mapToken)
-    }
-
-    @ReactProp(name = "navigationToken")
-    fun setNavigationToken(view: MapboxNavigationView, navigationToken: String) {
-        view.setNavigationToken(navigationToken)
     }
 
     @ReactProp(name = "camera")
