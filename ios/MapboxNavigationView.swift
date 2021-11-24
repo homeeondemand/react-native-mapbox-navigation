@@ -102,11 +102,8 @@ class MapboxNavigationView: UIView {
             
             mapView = MapView(frame: bounds, mapInitOptions: myMapInitOptions)
             
-            let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
-            mapView.isUserInteractionEnabled = true
-            mapView.addGestureRecognizer(tap)
-            
             hideMapInfo(mapView)
+            addGestureListener(mapView)
             
             // Add the map.
             self.addSubview(mapView)
@@ -135,6 +132,12 @@ class MapboxNavigationView: UIView {
         if(markers.count == 0 && polylines.count == 0) {
             self.setCamera()
         }
+    }
+    
+    func addGestureListener(_ mv: MapView!) {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        mv.isUserInteractionEnabled = true
+        mv.addGestureRecognizer(tap)
     }
     
     func setCamera() {
@@ -358,6 +361,7 @@ class MapboxNavigationView: UIView {
                     
                     
                     hideMapInfo(navigationViewController.navigationMapView?.mapView)
+                    strongSelf.addGestureListener(navigationViewController.navigationMapView?.mapView)
                     
                     navigationViewController.view.frame = strongSelf.bounds
                     parentVC.addChild(navigationViewController)
