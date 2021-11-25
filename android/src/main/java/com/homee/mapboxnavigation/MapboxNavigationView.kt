@@ -11,8 +11,10 @@ import android.graphics.drawable.Drawable
 import com.mapbox.maps.plugin.compass.compass
 import java.net.URL
 import android.os.AsyncTask
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.MotionEvent
 import com.facebook.react.bridge.*
 import com.facebook.react.uimanager.events.RCTEventEmitter
@@ -45,6 +47,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     var mapboxMap: MapboxMap? = null
     private var mapView: MapView? = null
     private var mapboxNavView: MapboxNavigationNavView? = null
+    private var mapboxNavigation: MapboxNavigationNavigation? = null
 
     private var isNavigation = false
     private var polylineAnnotationManager: PolylineAnnotationManager? = null
@@ -57,11 +60,14 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     init {
+        Log.w("MapboxNavigation", "init")
         instance = this
     }
 
     @SuppressLint("ClickableViewAccessibility")
     fun createMap() {
+        Log.w("MapboxNavigation", "onCreate")
+        Log.w("MapboxNavigation", mapView.toString())
         ResourceOptionsManager.getDefault(context.baseContext, mapToken!!)
         val layout = inflate(context, R.layout.mapview_layout, this)
 
@@ -130,11 +136,11 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         // add polylines points
         if (polylines != null) {
             for (i in 0 until polylines!!.size()) {
-                val polylineInfo = polylines!!.getMap(i)
+                val polylineInfo = polylines!!.getMap(i)!!
                 val polyline = polylineInfo.getArray("coordinates")
 
                 for (j in 0 until polyline!!.size()) {
-                    val polylineArr = polyline.getArray(j)
+                    val polylineArr = polyline.getArray(j)!!
                     val lat = polylineArr.getDouble(0)
                     val lng = polylineArr.getDouble(1)
                     val point = Point.fromLngLat(lng, lat)
@@ -147,7 +153,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         // add markers points
         if (markers != null) {
             for (i in 0 until markers!!.size()) {
-                val marker = markers!!.getMap(i)
+                val marker = markers!!.getMap(i)!!
                 val markerLatitude = marker.getDouble("latitude")
                 val markerLongitude = marker.getDouble("longitude")
                 val point = Point.fromLngLat(markerLongitude, markerLatitude)
@@ -205,17 +211,20 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     fun startNavigation() {
-        Handler(Looper.getMainLooper()).post {
-            if (navigationToken != null
-                && destination != null
-                && mapView != null
-            ) {
-                isNavigation = true
+        if (navigationToken != null
+            && destination != null
+            && mapView != null
+        ) {
 
+            Handler(Looper.getMainLooper()).post {
                 mapboxNavView = MapboxNavigationNavView(context, navigationToken!!, id, mapView!!)
                 mapboxNavView!!.initNavigation(userLocatorNavigation)
                 mapboxNavView!!.shouldSimulateRoute = shouldSimulateRoute
                 mapboxNavView!!.startNavigation(mapView!!, origin!!, destination!!, transportMode)
+    //            mapboxNavigation = MapboxNavigationNavigation(context, navigationToken!!, id, mapView!!)
+    //            mapboxNavigation?.startNavigation(origin!!, destination!!, transportMode, shouldSimulateRoute)
+
+                isNavigation = true
             }
         }
     }
@@ -226,6 +235,11 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
             mapboxNavView!!.stopNavigation(camera)
         }
+//        if (isNavigation && mapboxNavigation != null) {
+//            isNavigation = false
+//
+//            mapboxNavigation!!.stopNavigation()
+//        }
     }
 
     private fun addPolylines() {
@@ -234,14 +248,14 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
                     for (i in 0 until polylines!!.size()) {
                         val coordinates = mutableListOf<Point>()
-                        val polylineInfo = polylines!!.getMap(i)
+                        val polylineInfo = polylines!!.getMap(i)!!
                         val polyline = polylineInfo.getArray("coordinates")
                         val color = polylineInfo.getString("color")
                         val opacity =
                             if (polylineInfo.hasKey("opacity")) polylineInfo.getDouble("opacity") else 1.0
 
                         for (j in 0 until polyline!!.size()) {
-                            val polylineArr = polyline.getArray(j)
+                            val polylineArr = polyline.getArray(j)!!
                             val lat = polylineArr.getDouble(0)
                             val lng = polylineArr.getDouble(1)
                             val point = Point.fromLngLat(lng, lat)
@@ -274,7 +288,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 if (markers != null && markers!!.size() > 0) {
                     DoAsync {
                         for (i in 0 until markers!!.size()) {
-                            val marker = markers!!.getMap(i)
+                            val marker = markers!!.getMap(i)!!
 
                             val markerLatitude = marker.getDouble("latitude")
                             val markerLongitude = marker.getDouble("longitude")
@@ -321,8 +335,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     fun setMapToken(mapToken: String) {
+        val needCreation = this.mapToken == null
         this.mapToken = mapToken
-        updateMap()
+
+        if (needCreation) {
+            createMap()
+        }
     }
 
     fun setTransportMode(transportMode: String?) {
@@ -442,10 +460,14 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 "drawable",
                 mCallerContext.packageName
             )
-            resources.getDrawable(
-                resourceId,
-                mCallerContext.theme
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                resources.getDrawable(
+                    resourceId,
+                    mCallerContext.theme
+                )
+            } else {
+                TODO("VERSION.SDK_INT < LOLLIPOP")
+            }
         }
 
         return drawable
