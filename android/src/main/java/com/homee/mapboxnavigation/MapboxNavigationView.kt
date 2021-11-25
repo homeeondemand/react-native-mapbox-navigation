@@ -47,7 +47,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     var mapboxMap: MapboxMap? = null
     private var mapView: MapView? = null
     private var mapboxNavView: MapboxNavigationNavView? = null
-    private var mapboxNavigation: MapboxNavigationNavigation? = null
+    // private var mapboxNavigation: MapboxNavigationNavigation? = null
 
     private var isNavigation = false
     private var polylineAnnotationManager: PolylineAnnotationManager? = null
