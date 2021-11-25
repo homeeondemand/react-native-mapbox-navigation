@@ -23,6 +23,7 @@ RCT_EXPORT_VIEW_PROPERTY(userLocatorNavigation, NSDictionary)
 RCT_EXPORT_VIEW_PROPERTY(destination, NSArray)
 RCT_EXPORT_VIEW_PROPERTY(styleURL, NSString)
 RCT_EXPORT_VIEW_PROPERTY(transportMode, NSString)
+RCT_EXPORT_VIEW_PROPERTY(followUser, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(showUserLocation, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(shouldSimulateRoute, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(showsEndOfRouteFeedback, BOOL)
@@ -31,6 +32,8 @@ RCT_EXPORT_VIEW_PROPERTY(polylines, NSArray)
 
 RCT_EXTERN_METHOD(startNavigation)
 RCT_EXTERN_METHOD(stopNavigation)
+RCT_EXTERN_METHOD(startTracking)
+RCT_EXTERN_METHOD(stopTracking)
 RCT_EXTERN_METHOD(setCamera:(NSDictionary *) camera)
 
 @end

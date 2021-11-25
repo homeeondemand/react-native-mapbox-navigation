@@ -21,6 +21,7 @@ extension UIView {
 class MapboxNavigationView: UIView {
     weak var navViewController: NavigationViewController?
     internal var mapView: MapView!
+    internal var cameraLocationConsumer: CameraLocationConsumer!
     private var lineAnnotationManager: PolylineAnnotationManager?
     private var pointAnnotationManager: PointAnnotationManager?
     private var navigationService: MapboxNavigationService?
@@ -52,6 +53,11 @@ class MapboxNavigationView: UIView {
     @objc var showUserLocation: Bool = false {
         didSet { setNeedsLayout() }
     }
+    @objc var followUser: Bool = false {
+        didSet {
+            updateUserFollowing()
+        }
+    }
     
     @objc var shouldSimulateRoute: Bool = false
     @objc var styleURL: NSString = ""
@@ -70,6 +76,8 @@ class MapboxNavigationView: UIView {
     @objc var onNavigationStarted: RCTDirectEventBlock?
     @objc var onTap: RCTDirectEventBlock?
     @objc var onReroute: RCTDirectEventBlock?
+    
+    var navigating: Bool = false
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -126,6 +134,8 @@ class MapboxNavigationView: UIView {
             mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!)
         }
         
+        cameraLocationConsumer = CameraLocationConsumer(mapView: mapView)
+        
         self.addPolylines()
         self.addPoints()
         
@@ -153,6 +163,16 @@ class MapboxNavigationView: UIView {
                     pitch: camera["pitch"] as? CGFloat ?? 0.0
                 )
             )
+        }
+    }
+    
+    func updateUserFollowing() {
+        guard mapView != nil else { return }
+        
+        if (followUser) {
+            mapView.location.addLocationConsumer(newConsumer: self.cameraLocationConsumer)
+        } else {
+            mapView.location.removeLocationConsumer(consumer: self.cameraLocationConsumer)
         }
     }
     
@@ -226,6 +246,8 @@ class MapboxNavigationView: UIView {
     }
     
     func updateCameraForAnnotations() {
+        guard navigating == false else { return }
+        
         var pointsCoordinates: [CLLocationCoordinate2D] = []
 
         if(markers.count > 0) {
@@ -382,4 +404,27 @@ class MapboxNavigationView: UIView {
         }
     }
     
+    func startTracking() {
+        navigating = true
+    }
+    
+    func stopTracking() {
+        navigating = false
+    }
+    
+}
+
+public class CameraLocationConsumer: LocationConsumer {
+    weak var mapView: MapView?
+ 
+    init(mapView: MapView) {
+        self.mapView = mapView
+    }
+     
+    public func locationUpdate(newLocation: Location) {
+        mapView?.camera.ease(
+            to: CameraOptions(center: newLocation.coordinate, zoom: 15, bearing: newLocation.headingDirection),
+            duration: 1.3
+        )
+    }
 }

@@ -24,6 +24,14 @@ class MapboxNavigationManager: RCTViewManager {
         mapNavigationView?.stopNavigation()
     }
     
+    @objc func startTracking() {
+        mapNavigationView?.startTracking()
+    }
+    
+    @objc func stopTracking() {
+        mapNavigationView?.stopTracking()
+    }
+    
     @objc func setCamera(_ camera:NSDictionary) {
         if( mapNavigationView?.mapView != nil) {
             DispatchQueue.main.async {
