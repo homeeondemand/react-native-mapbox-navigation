@@ -24,16 +24,17 @@ class MapboxNavigationManager(private var mCallerContext: ReactApplicationContex
         super.onDropViewInstance(view)
     }
 
-    override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Map<String, String>>? {
-        return MapBuilder.of(
-            "onLocationChange", MapBuilder.of("registrationName", "onLocationChange"),
-            "onError", MapBuilder.of("registrationName", "onError"),
-            "onReroute", MapBuilder.of("registrationName", "onReroute"),
-            "onArrive", MapBuilder.of("registrationName", "onArrive"),
-            "onRouteProgressChange", MapBuilder.of("registrationName", "onRouteProgressChange"),
-            "onNavigationStarted", MapBuilder.of("registrationName", "onNavigationStarted"),
-            "onTap", MapBuilder.of("registrationName", "onTap"),
-        )
+    override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any>? {
+        return MapBuilder.builder<String?, Any?>()
+            .put("onLocationChange", MapBuilder.of("registrationName", "onLocationChange"))
+            .put("onError", MapBuilder.of("registrationName", "onError"))
+            .put("onReroute", MapBuilder.of("registrationName", "onReroute"))
+            .put("onArrive", MapBuilder.of("registrationName", "onArrive"))
+            .put("onRouteProgressChange", MapBuilder.of("registrationName", "onRouteProgressChange"))
+            .put("onNavigationStarted", MapBuilder.of("registrationName", "onNavigationStarted"))
+            .put("onTap", MapBuilder.of("registrationName", "onTap"))
+            .put("onMapMove", MapBuilder.of("registrationName", "onMapMove"))
+            .build()
     }
 
     @ReactProp(name = "mapToken")
@@ -68,6 +69,11 @@ class MapboxNavigationManager(private var mCallerContext: ReactApplicationContex
     @ReactProp(name = "shouldSimulateRoute")
     fun setShouldSimulateRoute(view: MapboxNavigationView, shouldSimulateRoute: Boolean) {
         view.setShouldSimulateRoute(shouldSimulateRoute)
+    }
+
+    @ReactProp(name = "followUser")
+    fun setFollowUser(view: MapboxNavigationView, followUser: Boolean) {
+        view.setFollowUser(followUser)
     }
 
     @ReactProp(name = "showsEndOfRouteFeedback")

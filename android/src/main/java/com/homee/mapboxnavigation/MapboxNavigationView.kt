@@ -16,11 +16,15 @@ import android.os.Looper
 import android.view.MotionEvent
 import com.facebook.react.bridge.*
 import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
 import com.mapbox.maps.*
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.*
 import com.mapbox.maps.plugin.attribution.attribution
+import com.mapbox.maps.plugin.gestures.OnMoveListener
+import com.mapbox.maps.plugin.gestures.addOnMoveListener
+import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
 import com.mapbox.navigation.ui.utils.internal.extensions.getBitmap
@@ -53,6 +57,21 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var pointAnnotation: PointAnnotation? = null
     private var pointAnnotationManager: PointAnnotationManager? = null
 
+    private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener { point ->
+        mapView?.let {
+            updateCamera(point)
+        }
+    }
+    private val onMoveListener = object : OnMoveListener {
+        override fun onMove(detector: MoveGestureDetector): Boolean {
+            return false
+        }
+        override fun onMoveBegin(detector: MoveGestureDetector) {
+            sendEvent("onMapMove", Arguments.createMap())
+        }
+        override fun onMoveEnd(detector: MoveGestureDetector) {}
+    }
+
     companion object {
         var instance: MapboxNavigationView? = null
     }
@@ -63,6 +82,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     @SuppressLint("ClickableViewAccessibility")
     fun createMap() {
+        if (mapView != null) return
+
         ResourceOptionsManager.getDefault(context.baseContext, mapToken!!)
         val layout = inflate(context, R.layout.mapview_layout, this)
 
@@ -79,11 +100,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         mapView?.let { mapView ->
             mapboxMap = mapView.getMapboxMap()
-
             mapView.logo.marginLeft = 3000.0F
             mapView.compass.enabled = false
             mapView.attribution.iconColor = Color.TRANSPARENT
             mapView.scalebar.enabled = false
+
+            mapboxMap?.addOnMoveListener(onMoveListener)
 
             val annotationApi = mapView.annotations
 
@@ -173,16 +195,17 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
     }
 
-    private fun updateCamera() {
+    private fun updateCamera(newCenter: Point? = null) {
         if (camera != null) {
-            val center = try {
-                Point.fromLngLat(
-                    camera!!.getArray("center")!!.getDouble(1),
-                    camera!!.getArray("center")!!.getDouble(0)
-                )
-            } catch (e: Exception) {
-                mapboxMap?.cameraState?.center
-            }
+            val center = newCenter
+                ?: try {
+                    Point.fromLngLat(
+                        camera!!.getArray("center")!!.getDouble(1),
+                        camera!!.getArray("center")!!.getDouble(0)
+                    )
+                } catch (e: Exception) {
+                    mapboxMap?.cameraState?.center
+                }
 
             val zoom = try {
                 camera!!.getDouble("zoom")
@@ -206,12 +229,17 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
     }
 
+    private fun sendEvent(name: String, data: WritableMap) {
+        context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, name, data)
+    }
+
     fun startNavigation() {
         if (navigationToken != null
             && destination != null
             && mapView != null
         ) {
             deletePolylines()
+            setFollowUser(false)
 
             Handler(Looper.getMainLooper()).post {
                 mapboxNavigation =
@@ -230,6 +258,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     fun stopNavigation() {
         if (isNavigation && mapboxNavigation != null) {
             isNavigation = false
+            setFollowUser(true)
 
             mapboxNavigation!!.stopNavigation()
         }
@@ -237,6 +266,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun startTracking() {
         isNavigation = true
+        setFollowUser(true)
     }
 
     fun stopTracking() {
@@ -328,6 +358,16 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setDestination(destination: Point?) {
         this.destination = destination
+    }
+
+    fun setFollowUser(followUser: Boolean) {
+        mapView?.let {
+            if (followUser) {
+                mapView!!.location.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
+            } else {
+                mapView!!.location.removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
+            }
+        }
     }
 
     fun setShouldSimulateRoute(shouldSimulateRoute: Boolean) {
