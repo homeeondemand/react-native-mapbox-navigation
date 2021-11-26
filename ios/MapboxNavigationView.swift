@@ -290,7 +290,10 @@ class MapboxNavigationView: UIView {
                                                          padding: .init(top: (camera["offset"] as? Bool == true) ? 82 : 42, left: 32, bottom:  (camera["offset"] as? Bool == true) ? 168 : 62, right: 32),
                                               bearing: nil,
                                               pitch: camera["pitch"] as? CGFloat ?? 1)
-        mapView.camera.ease(to: mapCamera, duration: 0.5)
+        
+        mapView.mapboxMap.setCamera(
+            to: mapCamera
+        )
     }
     
     @objc func handleTap(_ sender: UITapGestureRecognizer? = nil) {
