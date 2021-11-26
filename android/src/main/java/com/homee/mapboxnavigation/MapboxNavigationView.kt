@@ -24,6 +24,7 @@ import com.mapbox.maps.plugin.annotation.generated.*
 import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.addOnMoveListener
+import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
@@ -58,9 +59,18 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var pointAnnotationManager: PointAnnotationManager? = null
 
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener { point ->
-        mapView?.let {
-            updateCamera(point)
-        }
+        val cameraOptions = CameraOptions.Builder()
+            .center(point)
+            .build()
+
+        mapboxMap?.setCamera(cameraOptions)
+    }
+    private val onIndicatorBearingChangedListener = OnIndicatorBearingChangedListener { bearing ->
+        val cameraOptions = CameraOptions.Builder()
+            .bearing(bearing)
+            .build()
+
+        mapboxMap?.setCamera(cameraOptions)
     }
     private val onMoveListener = object : OnMoveListener {
         override fun onMove(detector: MoveGestureDetector): Boolean {
@@ -147,6 +157,78 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
     }
 
+    private fun addPolylines() {
+        Handler(Looper.getMainLooper()).post {
+            if (mapView != null) {
+                deletePolylines()
+                if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
+                    for (i in 0 until polylines!!.size()) {
+                        val coordinates = mutableListOf<Point>()
+                        val polylineInfo = polylines!!.getMap(i)!!
+                        val polyline = polylineInfo.getArray("coordinates")
+                        val color = polylineInfo.getString("color")
+                        val opacity =
+                            if (polylineInfo.hasKey("opacity")) polylineInfo.getDouble("opacity") else 1.0
+
+                        for (j in 0 until polyline!!.size()) {
+                            val polylineArr = polyline.getArray(j)!!
+                            val lat = polylineArr.getDouble(0)
+                            val lng = polylineArr.getDouble(1)
+                            val point = Point.fromLngLat(lng, lat)
+
+                            coordinates.add(point)
+                        }
+
+                        val polylineAnnotationOptions = PolylineAnnotationOptions()
+                            .withPoints(coordinates)
+                            .withLineColor(color ?: "#00AA8D")
+                            .withLineWidth(10.0)
+                            .withLineOpacity(opacity)
+                        polylineAnnotation =
+                            polylineAnnotationManager!!.create(polylineAnnotationOptions)
+
+                    }
+                }
+            }
+        }
+    }
+
+    private fun addMarkers() {
+        Handler(Looper.getMainLooper()).post {
+            if (mapView != null) {
+                if (markers != null && markers!!.size() > 0) {
+                    DoAsync {
+                        for (i in 0 until markers!!.size()) {
+                            val marker = markers!!.getMap(i)!!
+
+                            val markerLatitude = marker.getDouble("latitude")
+                            val markerLongitude = marker.getDouble("longitude")
+
+                            val markerIcon = marker.getMap("image")!!
+                            val markerUrl = markerIcon.getString("uri") ?: return@DoAsync
+                            val icon = getDrawableFromUri(markerUrl)
+                            val point = Point.fromLngLat(markerLongitude, markerLatitude)
+                            val pointAnnotationOptions: PointAnnotationOptions =
+                                PointAnnotationOptions()
+                                    .withPoint(point)
+
+                            if (icon !== null) {
+                                pointAnnotationOptions.withIconImage(icon.getBitmap())
+                            }
+
+                            pointAnnotation = pointAnnotationManager?.create(pointAnnotationOptions)
+                        }
+                    }
+                } else {
+                    if (pointAnnotation != null) {
+                        pointAnnotationManager?.deleteAll()
+                        pointAnnotation = null
+                    }
+                }
+            }
+        }
+    }
+
     private fun fitCameraForAnnotations() {
         val points = mutableListOf<Point>()
 
@@ -195,10 +277,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
     }
 
-    private fun updateCamera(newCenter: Point? = null) {
+    private fun updateCamera() {
         if (camera != null) {
-            val center = newCenter
-                ?: try {
+            val center = try {
                     Point.fromLngLat(
                         camera!!.getArray("center")!!.getDouble(1),
                         camera!!.getArray("center")!!.getDouble(0)
@@ -231,6 +312,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     private fun sendEvent(name: String, data: WritableMap) {
         context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, name, data)
+    }
+
+    private fun deletePolylines() {
+        if (polylineAnnotation != null) {
+            polylineAnnotationManager?.deleteAll()
+            polylineAnnotation = null
+        }
     }
 
     fun startNavigation() {
@@ -267,88 +355,18 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     fun startTracking() {
         isNavigation = true
         setFollowUser(true)
+
+        mapView?.let {
+            mapView!!.location.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
+            mapView!!.location.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
+        }
     }
 
     fun stopTracking() {
         isNavigation = false
-    }
 
-    private fun deletePolylines() {
-        if (polylineAnnotation != null) {
-            polylineAnnotationManager?.deleteAll()
-            polylineAnnotation = null
-        }
-    }
-
-    private fun addPolylines() {
-        Handler(Looper.getMainLooper()).post {
-            if (mapView != null) {
-                deletePolylines()
-                if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
-                    for (i in 0 until polylines!!.size()) {
-                        val coordinates = mutableListOf<Point>()
-                        val polylineInfo = polylines!!.getMap(i)!!
-                        val polyline = polylineInfo.getArray("coordinates")
-                        val color = polylineInfo.getString("color")
-                        val opacity =
-                            if (polylineInfo.hasKey("opacity")) polylineInfo.getDouble("opacity") else 1.0
-
-                        for (j in 0 until polyline!!.size()) {
-                            val polylineArr = polyline.getArray(j)!!
-                            val lat = polylineArr.getDouble(0)
-                            val lng = polylineArr.getDouble(1)
-                            val point = Point.fromLngLat(lng, lat)
-
-                            coordinates.add(point)
-                        }
-
-                        val polylineAnnotationOptions = PolylineAnnotationOptions()
-                            .withPoints(coordinates)
-                            .withLineColor(color ?: "#00AA8D")
-                            .withLineWidth(5.0)
-                            .withLineOpacity(opacity)
-                        polylineAnnotation =
-                            polylineAnnotationManager!!.create(polylineAnnotationOptions)
-
-                    }
-                }
-            }
-        }
-    }
-
-    private fun addMarkers() {
-        Handler(Looper.getMainLooper()).post {
-            if (mapView != null) {
-                if (markers != null && markers!!.size() > 0) {
-                    DoAsync {
-                        for (i in 0 until markers!!.size()) {
-                            val marker = markers!!.getMap(i)!!
-
-                            val markerLatitude = marker.getDouble("latitude")
-                            val markerLongitude = marker.getDouble("longitude")
-
-                            val markerIcon = marker.getMap("image")!!
-                            val markerUrl = markerIcon.getString("uri") ?: return@DoAsync
-                            val icon = getDrawableFromUri(markerUrl)
-                            val point = Point.fromLngLat(markerLongitude, markerLatitude)
-                            val pointAnnotationOptions: PointAnnotationOptions =
-                                PointAnnotationOptions()
-                                    .withPoint(point)
-
-                            if (icon !== null) {
-                                pointAnnotationOptions.withIconImage(icon.getBitmap())
-                            }
-
-                            pointAnnotation = pointAnnotationManager?.create(pointAnnotationOptions)
-                        }
-                    }
-                } else {
-                    if (pointAnnotation != null) {
-                        pointAnnotationManager?.deleteAll()
-                        pointAnnotation = null
-                    }
-                }
-            }
+        mapView?.let {
+            mapView!!.location.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
         }
     }
 
