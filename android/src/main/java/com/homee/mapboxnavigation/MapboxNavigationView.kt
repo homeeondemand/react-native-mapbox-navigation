@@ -150,9 +150,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             )
         }
 
+        addMarkers()
+        addPolylines()
+
         if (!isNavigation) {
-            addMarkers()
-            addPolylines()
             fitCameraForAnnotations()
         }
     }
@@ -368,6 +369,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         mapView?.let {
             mapView!!.location.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
         }
+        updateCamera()
     }
 
     fun setOrigin(origin: Point?) {
