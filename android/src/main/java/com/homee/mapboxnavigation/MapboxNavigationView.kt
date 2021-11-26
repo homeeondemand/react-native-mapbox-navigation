@@ -367,7 +367,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         isNavigation = false
 
         mapView?.let {
-            mapView!!.location.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
+            mapView!!.location.removeOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
+            mapView!!.location.removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
         }
         updateCamera()
     }
