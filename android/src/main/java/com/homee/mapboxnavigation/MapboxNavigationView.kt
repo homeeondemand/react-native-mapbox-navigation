@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.widget.LinearLayout
 import com.facebook.react.uimanager.ThemedReactContext
-import com.mapbox.geojson.Point
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.locationcomponent.location
 import android.graphics.drawable.Drawable
@@ -14,10 +13,10 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.MotionEvent
 import com.facebook.react.bridge.*
 import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.mapbox.geojson.Point
 import com.mapbox.maps.*
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.*
@@ -46,8 +45,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     var mapboxMap: MapboxMap? = null
     private var mapView: MapView? = null
-    private var mapboxNavView: MapboxNavigationNavView? = null
-    // private var mapboxNavigation: MapboxNavigationNavigation? = null
+    private var mapboxNavigation: MapboxNavigationNavigation? = null
 
     private var isNavigation = false
     private var polylineAnnotationManager: PolylineAnnotationManager? = null
@@ -60,14 +58,11 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     init {
-        Log.w("MapboxNavigation", "init")
         instance = this
     }
 
     @SuppressLint("ClickableViewAccessibility")
     fun createMap() {
-        Log.w("MapboxNavigation", "onCreate")
-        Log.w("MapboxNavigation", mapView.toString())
         ResourceOptionsManager.getDefault(context.baseContext, mapToken!!)
         val layout = inflate(context, R.layout.mapview_layout, this)
 
@@ -170,7 +165,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     72.0,
                     if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 328.0 else 32.0,
                     72.0
-                ))
+                )
+            )
             mapboxMap?.setCamera(newCameraOptions)
         } else {
             updateCamera()
@@ -215,36 +211,49 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             && destination != null
             && mapView != null
         ) {
+            deletePolylines()
 
             Handler(Looper.getMainLooper()).post {
-                mapboxNavView = MapboxNavigationNavView(context, navigationToken!!, id, mapView!!)
-                mapboxNavView!!.initNavigation(userLocatorNavigation)
-                mapboxNavView!!.shouldSimulateRoute = shouldSimulateRoute
-                mapboxNavView!!.startNavigation(mapView!!, origin!!, destination!!, transportMode)
-    //            mapboxNavigation = MapboxNavigationNavigation(context, navigationToken!!, id, mapView!!)
-    //            mapboxNavigation?.startNavigation(origin!!, destination!!, transportMode, shouldSimulateRoute)
-
-                isNavigation = true
+                mapboxNavigation =
+                    MapboxNavigationNavigation(context, navigationToken!!, id, mapView!!)
+                mapboxNavigation?.startNavigation(
+                    origin!!,
+                    destination!!,
+                    transportMode,
+                    shouldSimulateRoute
+                )
             }
+            isNavigation = true
         }
     }
 
     fun stopNavigation() {
-        if (isNavigation && mapboxNavView != null) {
+        if (isNavigation && mapboxNavigation != null) {
             isNavigation = false
 
-            mapboxNavView!!.stopNavigation(camera)
+            mapboxNavigation!!.stopNavigation()
         }
-//        if (isNavigation && mapboxNavigation != null) {
-//            isNavigation = false
-//
-//            mapboxNavigation!!.stopNavigation()
-//        }
+    }
+
+    fun startTracking() {
+        isNavigation = true
+    }
+
+    fun stopTracking() {
+        isNavigation = false
+    }
+
+    private fun deletePolylines() {
+        if (polylineAnnotation != null) {
+            polylineAnnotationManager?.deleteAll()
+            polylineAnnotation = null
+        }
     }
 
     private fun addPolylines() {
         Handler(Looper.getMainLooper()).post {
             if (mapView != null) {
+                deletePolylines()
                 if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
                     for (i in 0 until polylines!!.size()) {
                         val coordinates = mutableListOf<Point>()
@@ -271,11 +280,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         polylineAnnotation =
                             polylineAnnotationManager!!.create(polylineAnnotationOptions)
 
-                    }
-                } else {
-                    if (polylineAnnotation != null) {
-                        polylineAnnotationManager?.deleteAll()
-                        polylineAnnotation = null
                     }
                 }
             }

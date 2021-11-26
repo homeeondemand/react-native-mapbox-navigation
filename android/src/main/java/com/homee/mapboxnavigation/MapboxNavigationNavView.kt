@@ -110,7 +110,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
 
         mapboxMap?.getStyle()?.apply {
             routeLineApi.updateWithRouteProgress(routeProgress) { result ->
-               routeLineView.renderRouteLineUpdate(this, result)
+                routeLineView.renderRouteLineUpdate(this, result)
             }
 
             routeLineApi.setRoutes(routeLines) { value ->
@@ -345,7 +345,7 @@ class MapboxNavigationNavView(private val context: ThemedReactContext, private v
                 // adjusts the pitch towards the horizon
                 .pitch(pitch)
                 // specify frame of reference from the center.
-                .padding(EdgeInsets(1000.0, 0.0, 0.0, 0.0))
+                .padding(EdgeInsets(500.0, 0.0, 0.0, 0.0))
                 .build(),
             mapAnimationOptions
         )

@@ -13,10 +13,18 @@ class MapboxNavigationModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun startTracking() {
+        MapboxNavigationView.instance?.startTracking()
+    }
+    @ReactMethod
+    fun stopTracking() {
+        MapboxNavigationView.instance?.stopTracking()
+    }
+
+    @ReactMethod
     fun startNavigation() {
         MapboxNavigationView.instance?.startNavigation()
     }
-
     @ReactMethod
     fun stopNavigation() {
         MapboxNavigationView.instance?.stopNavigation()

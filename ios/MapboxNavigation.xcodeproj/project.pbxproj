@@ -10,6 +10,7 @@
 		957B881A244753D70058C6C1 /* MapboxNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957B8816244753D70058C6C1 /* MapboxNavigationView.swift */; };
 		957B881C244753D70058C6C1 /* MapboxNavigationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 957B8818244753D70058C6C1 /* MapboxNavigationManager.m */; };
 		957B881D244753D70058C6C1 /* MapboxNavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957B8819244753D70058C6C1 /* MapboxNavigationManager.swift */; };
+		AC4477992750CC2D00BA2CF0 /* MapboxNavigationCameraLocationConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC4477982750CC2C00BA2CF0 /* MapboxNavigationCameraLocationConsumer.swift */; };
 		AC4985B82739335300ECE533 /* MapboxNavigationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC4985B72739335300ECE533 /* MapboxNavigationHelpers.swift */; };
 		AC4985BA273933BD00ECE533 /* MapboxNavigationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC4985B9273933BD00ECE533 /* MapboxNavigationDelegate.swift */; };
 		AC7A22D62706EE3D00141160 /* MapboxNavigationBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC7A22D52706EE3D00141160 /* MapboxNavigationBannerView.swift */; };
@@ -35,6 +36,7 @@
 		957B8816244753D70058C6C1 /* MapboxNavigationView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapboxNavigationView.swift; sourceTree = "<group>"; };
 		957B8818244753D70058C6C1 /* MapboxNavigationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapboxNavigationManager.m; sourceTree = "<group>"; };
 		957B8819244753D70058C6C1 /* MapboxNavigationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapboxNavigationManager.swift; sourceTree = "<group>"; };
+		AC4477982750CC2C00BA2CF0 /* MapboxNavigationCameraLocationConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxNavigationCameraLocationConsumer.swift; sourceTree = "<group>"; };
 		AC4985B72739335300ECE533 /* MapboxNavigationHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxNavigationHelpers.swift; sourceTree = "<group>"; };
 		AC4985B9273933BD00ECE533 /* MapboxNavigationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxNavigationDelegate.swift; sourceTree = "<group>"; };
 		AC7A22D52706EE3D00141160 /* MapboxNavigationBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxNavigationBannerView.swift; sourceTree = "<group>"; };
@@ -64,6 +66,7 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				AC4477982750CC2C00BA2CF0 /* MapboxNavigationCameraLocationConsumer.swift */,
 				AC4985B9273933BD00ECE533 /* MapboxNavigationDelegate.swift */,
 				AC4985B72739335300ECE533 /* MapboxNavigationHelpers.swift */,
 				AC7A22D92706EEDA00141160 /* MapboxNavigationViewportDataSource.swift */,
@@ -136,6 +139,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AC4985B82739335300ECE533 /* MapboxNavigationHelpers.swift in Sources */,
+				AC4477992750CC2D00BA2CF0 /* MapboxNavigationCameraLocationConsumer.swift in Sources */,
 				AC7A22D82706EE7900141160 /* MapboxNavigationCameraStateTransition.swift in Sources */,
 				AC7A22DA2706EEDA00141160 /* MapboxNavigationViewportDataSource.swift in Sources */,
 				AC4985BA273933BD00ECE533 /* MapboxNavigationDelegate.swift in Sources */,

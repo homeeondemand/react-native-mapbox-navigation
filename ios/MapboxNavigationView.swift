@@ -21,7 +21,7 @@ extension UIView {
 class MapboxNavigationView: UIView {
     weak var navViewController: NavigationViewController?
     internal var mapView: MapView!
-    internal var cameraLocationConsumer: CameraLocationConsumer!
+    internal var cameraLocationConsumer: MapboxNavigationCameraLocationConsumer!
     private var lineAnnotationManager: PolylineAnnotationManager?
     private var pointAnnotationManager: PointAnnotationManager?
     private var navigationService: MapboxNavigationService?
@@ -134,7 +134,7 @@ class MapboxNavigationView: UIView {
             mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!)
         }
         
-        cameraLocationConsumer = CameraLocationConsumer(mapView: mapView)
+        cameraLocationConsumer = MapboxNavigationCameraLocationConsumer(mapView: mapView)
         
         self.addPolylines()
         self.addPoints()
@@ -412,19 +412,4 @@ class MapboxNavigationView: UIView {
         navigating = false
     }
     
-}
-
-public class CameraLocationConsumer: LocationConsumer {
-    weak var mapView: MapView?
- 
-    init(mapView: MapView) {
-        self.mapView = mapView
-    }
-     
-    public func locationUpdate(newLocation: Location) {
-        mapView?.camera.ease(
-            to: CameraOptions(center: newLocation.coordinate, zoom: 15, bearing: newLocation.headingDirection),
-            duration: 1.3
-        )
-    }
 }
