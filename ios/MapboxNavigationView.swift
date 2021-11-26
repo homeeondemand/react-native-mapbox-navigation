@@ -75,6 +75,7 @@ class MapboxNavigationView: UIView {
     @objc var onArrive: RCTDirectEventBlock?
     @objc var onNavigationStarted: RCTDirectEventBlock?
     @objc var onTap: RCTDirectEventBlock?
+    @objc var onMapMove: RCTDirectEventBlock?
     @objc var onReroute: RCTDirectEventBlock?
     
     var navigating: Bool = false
@@ -146,8 +147,16 @@ class MapboxNavigationView: UIView {
     
     func addGestureListener(_ mv: MapView!) {
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        
         mv.isUserInteractionEnabled = true
         mv.addGestureRecognizer(tap)
+        
+        for gestureRecognizer in mapView.gestureRecognizers! {
+            if let _ = gestureRecognizer as? UIPanGestureRecognizer {
+                gestureRecognizer.addTarget(self, action: #selector(handlePan))
+                break
+            }
+        }
     }
     
     func setCamera() {
@@ -286,6 +295,12 @@ class MapboxNavigationView: UIView {
     
     @objc func handleTap(_ sender: UITapGestureRecognizer? = nil) {
         onTap?(["message": ""]);
+    }
+    
+    @objc func handlePan(_ sender: UIPanGestureRecognizer? = nil) {
+        if(sender?.state == .began) {
+            onMapMove?(["message": ""]);
+        }
     }
     
     func startNavigation() {
