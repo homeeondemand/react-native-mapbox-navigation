@@ -36,5 +36,4 @@ class MapboxNavigationModule(reactContext: ReactApplicationContext) :
             MapboxNavigationView.instance?.setCamera(camera)
         }
     }
-
 }

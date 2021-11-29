@@ -53,24 +53,30 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var mapboxNavigation: MapboxNavigationNavigation? = null
 
     private var isNavigation = false
+    private var followUser = false
     private var polylineAnnotationManager: PolylineAnnotationManager? = null
     private var polylineAnnotation: PolylineAnnotation? = null
     private var pointAnnotation: PointAnnotation? = null
     private var pointAnnotationManager: PointAnnotationManager? = null
 
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener { point ->
-        val cameraOptions = CameraOptions.Builder()
-            .center(point)
-            .build()
+        if (isNavigation || !followUser) {
+            val cameraOptions = CameraOptions.Builder()
+                .center(point)
+                .build()
 
-        mapboxMap?.setCamera(cameraOptions)
+            mapboxMap?.setCamera(cameraOptions)
+        }
+
     }
     private val onIndicatorBearingChangedListener = OnIndicatorBearingChangedListener { bearing ->
-        val cameraOptions = CameraOptions.Builder()
-            .bearing(bearing)
-            .build()
+        if (isNavigation) {
+            val cameraOptions = CameraOptions.Builder()
+                .bearing(bearing)
+                .build()
 
-        mapboxMap?.setCamera(cameraOptions)
+            mapboxMap?.setCamera(cameraOptions)
+        }
     }
     private val onMoveListener = object : OnMoveListener {
         override fun onMove(detector: MoveGestureDetector): Boolean {
@@ -116,6 +122,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             mapView.scalebar.enabled = false
 
             mapboxMap?.addOnMoveListener(onMoveListener)
+            mapView.location.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
+            mapView.location.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
 
             val annotationApi = mapView.annotations
 
@@ -356,21 +364,19 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     fun startTracking() {
         isNavigation = true
         setFollowUser(true)
-
-        mapView?.let {
-            mapView!!.location.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
-            mapView!!.location.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
-        }
     }
 
     fun stopTracking() {
         isNavigation = false
 
         mapView?.let {
-            mapView!!.location.removeOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
-            mapView!!.location.removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
+            val cameraOptions = CameraOptions.Builder()
+                .pitch(0.0)
+                .bearing(null)
+                .build()
+
+            mapboxMap?.setCamera(cameraOptions)
         }
-        updateCamera()
     }
 
     fun setOrigin(origin: Point?) {
@@ -382,13 +388,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     fun setFollowUser(followUser: Boolean) {
-        mapView?.let {
-            if (followUser) {
-                mapView!!.location.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
-            } else {
-                mapView!!.location.removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
-            }
-        }
+        this.followUser = followUser
     }
 
     fun setShouldSimulateRoute(shouldSimulateRoute: Boolean) {

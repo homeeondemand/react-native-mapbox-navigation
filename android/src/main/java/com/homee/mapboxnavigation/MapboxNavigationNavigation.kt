@@ -27,7 +27,6 @@ import com.mapbox.navigation.base.route.RouterFailure
 import com.mapbox.navigation.base.route.RouterOrigin
 import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.MapboxNavigationProvider
-import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.core.formatter.MapboxDistanceFormatter
 import com.mapbox.navigation.core.replay.MapboxReplayer
 import com.mapbox.navigation.core.replay.ReplayLocationEngine
@@ -321,25 +320,26 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
         mapboxMap = mapView.getMapboxMap()
 
         // initialize the location puck
-        mapView.location.apply {
-            setLocationProvider(navigationLocationProvider)
-            enabled = true
-        }
+//        mapView.location.apply {
+//            setLocationProvider(navigationLocationProvider)
+//            enabled = true
+//        }
 
         // initialize Mapbox Navigation
         mapboxNavigation = if (MapboxNavigationProvider.isCreated()) {
             MapboxNavigationProvider.retrieve()
         } else {
+            val providerOptions = NavigationOptions.Builder(context.baseContext)
+                .accessToken(token)
+
+            if (shouldSimulate) {
+                providerOptions.locationEngine(replayLocationEngine)
+            }
+
             MapboxNavigationProvider.create(
-                NavigationOptions.Builder(context)
-                    .accessToken(token)
-                    // comment out the location engine setting block to disable simulation
-                    .locationEngine(replayLocationEngine)
-                    .build()
+               providerOptions.build()
             )
         }
-
-        registerListeners()
 
         // initialize Navigation Camera
         viewportDataSource = MapboxNavigationViewportDataSource(mapboxMap!!)
@@ -402,7 +402,6 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
         mapboxNavigation!!.startTripSession()
 
         generateRoute(origin, destination)
-
     }
 
     fun stopNavigation() {
@@ -438,10 +437,14 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
     private fun generateRoute(origin: Point, destination: Point) {
         val routeOptions = RouteOptions.builder()
             .enableRefresh(true)
-            .bannerInstructions(true)
-            .steps(true)
-            .coordinatesList(listOf(origin, destination))
             .profile(getTransportMode(transportMode))
+            .overview(DirectionsCriteria.OVERVIEW_FULL)
+            .steps(true)
+            .continueStraight(true)
+            .voiceInstructions(true)
+            .bannerInstructions(true)
+            .enableRefresh(true)
+            .coordinatesList(listOf(origin, destination))
             .build()
 
         // execute a route request
@@ -471,12 +474,17 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
     private fun setRouteAndStartNavigation(routes: List<DirectionsRoute>) {
         // set routes, where the first route in the list is the primary route that
         // will be used for active guidance
-        mapboxNavigation?.setRoutes(routes)
+        mapboxNavigation?.setRoutes(routes, 0)
 
         // start location simulation along the primary route
         if (shouldSimulate) startSimulation(routes.first())
 
+        viewportDataSource.onRouteChanged(routes.first())
+        viewportDataSource.evaluate()
+
         sendEvent("onNavigationStarted", Arguments.createMap())
+
+        registerListeners()
     }
 
     private fun getTransportMode(transportMode: String): String {
@@ -515,21 +523,6 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
         mapboxNavigation?.registerVoiceInstructionsObserver(voiceInstructionsObserver)
         mapboxNavigation?.registerRouteProgressObserver(replayProgressObserver)
         mapboxNavigation?.getRerouteController()?.registerRerouteStateObserver(onRerouteObserver)
-
-        if (mapboxNavigation?.getRoutes()?.isEmpty() == true) {
-            // if simulation is enabled (ReplayLocationEngine set to NavigationOptions)
-            // but we're not simulating yet,
-            // push a single location sample to establish origin
-            mapboxReplayer.pushEvents(
-                listOf(
-                    ReplayRouteMapper.mapToUpdateLocation(
-                        eventTimestamp = 0.0,
-                        point = Point.fromLngLat(-122.39726512303575, 37.785128345296805)
-                    )
-                )
-            )
-            mapboxReplayer.playFirstLocation()
-        }
     }
 
     private fun unregisterListeners() {
