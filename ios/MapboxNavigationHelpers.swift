@@ -36,13 +36,13 @@ func getImage(image: NSDictionary) -> UIImage {
 func getTransportMode(transportMode: NSString) -> DirectionsProfileIdentifier {
     switch transportMode {
     case "moto":
-        return .automobile
+        return .automobileAvoidingTraffic
     case "scooter":
         return .walking
     case "pedestrian":
         return .walking
     default:
-        return .cycling
+        return .walking
     }
 }
 

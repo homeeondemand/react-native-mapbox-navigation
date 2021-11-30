@@ -315,7 +315,8 @@ class MapboxNavigationView: UIView {
             let destinationWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: CLLocationDegrees(destination?[0] as! CGFloat), longitude: CLLocationDegrees(destination?[1] as! CGFloat)))
             
             let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint])
-            //options.profileIdentifier = getTransportMode(transportMode: transportMode)
+            options.includesSpokenInstructions = false
+            options.profileIdentifier = getTransportMode(transportMode: transportMode)
             
             UserDefaults.standard.setValue(self.navigationToken, forKey: "MBXAccessToken")
             
