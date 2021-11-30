@@ -210,6 +210,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         for (i in 0 until markers!!.size()) {
                             val marker = markers!!.getMap(i)!!
 
+                            if (!marker.hasKey("latitude") || !marker.hasKey("longitude")) continue
+
                             val markerLatitude = marker.getDouble("latitude")
                             val markerLongitude = marker.getDouble("longitude")
 
@@ -259,9 +261,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
 
         // add markers points
-        if (markers != null) {
+        if (markers != null && markers!!.size() > 0) {
             for (i in 0 until markers!!.size()) {
                 val marker = markers!!.getMap(i)!!
+
+                if (!marker.hasKey("latitude") || !marker.hasKey("longitude")) continue
+
                 val markerLatitude = marker.getDouble("latitude")
                 val markerLongitude = marker.getDouble("longitude")
                 val point = Point.fromLngLat(markerLongitude, markerLatitude)
@@ -503,6 +508,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setMarkers(markers: ReadableArray?) {
         this.markers = markers
+        updateMap()
     }
 
     fun setPolylines(polylines: ReadableArray?) {
