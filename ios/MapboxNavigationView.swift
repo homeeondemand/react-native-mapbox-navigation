@@ -59,6 +59,7 @@ class MapboxNavigationView: UIView {
         }
     }
     
+    @objc var useImperial: Bool = false
     @objc var shouldSimulateRoute: Bool = false
     @objc var styleURL: NSString = ""
     @objc var mapToken: NSString = ""
@@ -317,6 +318,7 @@ class MapboxNavigationView: UIView {
             let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint])
             options.includesSpokenInstructions = false
             options.profileIdentifier = getTransportMode(transportMode: transportMode)
+            options.distanceMeasurementSystem = useImperial ? .imperial : .metric
             
             UserDefaults.standard.setValue(self.navigationToken, forKey: "MBXAccessToken")
             

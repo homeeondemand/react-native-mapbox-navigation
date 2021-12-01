@@ -76,6 +76,11 @@ class MapboxNavigationManager(private var mCallerContext: ReactApplicationContex
         view.setFollowUser(followUser)
     }
 
+    @ReactProp(name = "useImperial")
+    fun setUseImperial(view: MapboxNavigationView, useImperial: Boolean) {
+        view.setUseImperial(useImperial)
+    }
+
     @ReactProp(name = "showsEndOfRouteFeedback")
     fun setShowsEndOfRouteFeedback(view: MapboxNavigationView, showsEndOfRouteFeedback: Boolean) {
         view.setShowsEndOfRouteFeedback(showsEndOfRouteFeedback)

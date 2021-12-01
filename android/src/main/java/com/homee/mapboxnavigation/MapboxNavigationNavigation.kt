@@ -21,6 +21,8 @@ import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.navigation.base.TimeFormat
+import com.mapbox.navigation.base.formatter.DistanceFormatterOptions
+import com.mapbox.navigation.base.formatter.UnitType
 import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.base.route.RouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
@@ -62,6 +64,7 @@ import java.util.*
 
 class MapboxNavigationNavigation(private val context:ThemedReactContext, private val token: String, private val id: Int, private val mapView: MapView) {
     private var shouldSimulate: Boolean = false
+    private var useImperial: Boolean = false
     private var transportMode: String = "moto"
     private var mapboxMap: MapboxMap? = null
     private var mapboxNavigation: MapboxNavigation? = null
@@ -312,10 +315,11 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
     }
 
     @SuppressLint("MissingPermission")
-    fun startNavigation(origin: Point, destination: Point, transportMode: String, shouldSimulate: Boolean) {
+    fun startNavigation(origin: Point, destination: Point, transportMode: String, shouldSimulate: Boolean, useImperial: Boolean) {
         updateCamera(origin)
         this.shouldSimulate = shouldSimulate
         this.transportMode = transportMode
+        this.useImperial = useImperial
 
         mapboxMap = mapView.getMapboxMap()
 
@@ -329,7 +333,14 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
         mapboxNavigation = if (MapboxNavigationProvider.isCreated()) {
             MapboxNavigationProvider.retrieve()
         } else {
+            val formatterOptions = DistanceFormatterOptions
+                .Builder(context.baseContext)
+                .unitType(
+                    if (useImperial) UnitType.IMPERIAL else UnitType.METRIC
+                )
+                .build()
             val providerOptions = NavigationOptions.Builder(context.baseContext)
+               .distanceFormatterOptions(formatterOptions)
                 .accessToken(token)
 
             if (shouldSimulate) {
@@ -337,7 +348,8 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
             }
 
             MapboxNavigationProvider.create(
-               providerOptions.build()
+               providerOptions
+                   .build()
             )
         }
 

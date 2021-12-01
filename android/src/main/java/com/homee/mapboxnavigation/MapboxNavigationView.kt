@@ -35,6 +35,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var origin: Point? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
+    private var useImperial = false
     private var showsEndOfRouteFeedback = false
     private var mapToken: String? = null
     private var navigationToken: String? = null
@@ -350,7 +351,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     origin!!,
                     destination!!,
                     transportMode,
-                    shouldSimulateRoute
+                    shouldSimulateRoute,
+                    useImperial
                 )
             }
             isNavigation = true
@@ -394,6 +396,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setFollowUser(followUser: Boolean) {
         this.followUser = followUser
+    }
+
+    fun setUseImperial(useImperial: Boolean) {
+        this.useImperial = useImperial
     }
 
     fun setShouldSimulateRoute(shouldSimulateRoute: Boolean) {
