@@ -102,6 +102,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         if (mapView != null) return
 
         ResourceOptionsManager.getDefault(context.baseContext, mapToken!!)
+
         val layout = inflate(context, R.layout.mapview_layout, this)
 
         mapView = layout.findViewById(R.id.mapView)
@@ -192,7 +193,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         val polylineAnnotationOptions = PolylineAnnotationOptions()
                             .withPoints(coordinates)
                             .withLineColor(color ?: "#00AA8D")
-                            .withLineWidth(10.0)
+                            .withLineWidth(5.0)
                             .withLineOpacity(opacity)
                         polylineAnnotation =
                             polylineAnnotationManager!!.create(polylineAnnotationOptions)
