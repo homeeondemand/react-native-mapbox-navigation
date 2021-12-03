@@ -61,7 +61,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var pointAnnotationManager: PointAnnotationManager? = null
 
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener { point ->
-        if (isNavigation || !followUser) {
+        if (isNavigation || followUser) {
             val cameraOptions = CameraOptions.Builder()
                 .center(point)
                 .build()
@@ -160,12 +160,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             )
         }
 
-        addMarkers()
-        addPolylines()
-
-        if (!isNavigation) {
+        if (!this.isNavigation) {
             fitCameraForAnnotations()
         }
+
+        addMarkers()
+        addPolylines()
     }
 
     private fun addPolylines() {
@@ -283,7 +283,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 EdgeInsets(
                     if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 62.0 else 42.0,
                     72.0,
-                    if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 328.0 else 32.0,
+                    if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 168.0 else 32.0,
                     72.0
                 )
             )
@@ -296,13 +296,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private fun updateCamera() {
         if (camera != null) {
             val center = try {
-                    Point.fromLngLat(
-                        camera!!.getArray("center")!!.getDouble(1),
-                        camera!!.getArray("center")!!.getDouble(0)
-                    )
-                } catch (e: Exception) {
-                    mapboxMap?.cameraState?.center
-                }
+                Point.fromLngLat(
+                    camera!!.getArray("center")!!.getDouble(1),
+                    camera!!.getArray("center")!!.getDouble(0)
+                )
+            } catch (e: Exception) {
+                mapboxMap?.cameraState?.center
+            }
 
             val zoom = try {
                 camera!!.getDouble("zoom")
@@ -515,12 +515,11 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setMarkers(markers: ReadableArray?) {
         this.markers = markers
-        updateMap()
     }
 
     fun setPolylines(polylines: ReadableArray?) {
         this.polylines = polylines
-        updateMap()
+        customizeMap()
     }
 
     fun onDropViewInstance() {
