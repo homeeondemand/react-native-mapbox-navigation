@@ -298,6 +298,11 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
             // Render the result to update the map.
             routeLineView.renderRouteLineUpdate(this, result)
         }
+
+        val event = Arguments.createMap()
+        event.putDouble("latitude", point.latitude())
+        event.putDouble("longitude", point.longitude())
+        sendEvent("onLocationChange", event)
     }
 
     /**

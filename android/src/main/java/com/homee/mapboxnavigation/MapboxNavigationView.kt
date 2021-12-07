@@ -342,6 +342,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             && destination != null
             && mapView != null
         ) {
+            isNavigation = true
             deletePolylines()
             setFollowUser(false)
 
@@ -356,12 +357,11 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     useImperial
                 )
             }
-            isNavigation = true
         }
     }
 
     fun stopNavigation() {
-        if (isNavigation && mapboxNavigation != null) {
+        if (mapboxNavigation != null) {
             isNavigation = false
             setFollowUser(true)
 
