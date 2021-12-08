@@ -21,6 +21,7 @@ import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.navigation.base.TimeFormat
+import com.mapbox.navigation.base.extensions.applyLanguageAndVoiceUnitOptions
 import com.mapbox.navigation.base.formatter.DistanceFormatterOptions
 import com.mapbox.navigation.base.formatter.UnitType
 import com.mapbox.navigation.base.options.NavigationOptions
@@ -398,16 +399,18 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
                 .build()
         )
 
+        val locale = context.resources.configuration.locales[0]
+
         // initialize voice instructions api and the voice instruction player
         speechApi = MapboxSpeechApi(
             context,
             token,
-            Locale.US.language
+            locale.language
         )
         voiceInstructionsPlayer = MapboxVoiceInstructionsPlayer(
             context,
             token,
-            Locale.US.language
+            locale.language
         )
 
         // initialize maneuver arrow view to draw arrows on the map
@@ -456,6 +459,7 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
             .enableRefresh(true)
             .profile(getTransportMode(transportMode))
             .overview(DirectionsCriteria.OVERVIEW_FULL)
+            .applyLanguageAndVoiceUnitOptions(context)
             .steps(true)
             .continueStraight(true)
             .voiceInstructions(true)
