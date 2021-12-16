@@ -51,6 +51,8 @@ func hideMapInfo(_ mapView: MapView!) {
     
     mapView.ornaments.options.scaleBar.visibility = .hidden
     mapView.ornaments.options.compass.visibility = .hidden
-    mapView.ornaments.options.logo.margins = CGPoint(x: -100, y: -100)
-    mapView.ornaments.options.attributionButton.margins = CGPoint(x: -100, y: -100)
+    mapView.ornaments.options.logo.margins = CGPoint(x: -80.0, y: -80.0)
+    mapView.ornaments.options.attributionButton.margins = CGPoint(x: 100, y: 100)
+    
+    ResumeButton.appearance().alpha = 0
 }
