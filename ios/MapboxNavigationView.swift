@@ -288,7 +288,7 @@ class MapboxNavigationView: UIView {
         }
         
         let mapCamera = mapView.mapboxMap.camera(for: pointsCoordinates,
-                                                         padding: .init(top: (camera["offset"] as? Bool == true) ? 82 : 42, left: 32, bottom:  (camera["offset"] as? Bool == true) ? 168 : 62, right: 32),
+                                                         padding: .init(top: (camera["offset"] as? Bool == true) ? 82 : 62, left: 32, bottom:  (camera["offset"] as? Bool == true) ? 168 : 62, right: 32),
                                               bearing: nil,
                                               pitch: camera["pitch"] as? CGFloat ?? 1)
         
