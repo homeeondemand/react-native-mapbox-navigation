@@ -13,15 +13,18 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.MotionEvent
 import com.facebook.react.bridge.*
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
 import com.mapbox.maps.*
+import com.mapbox.maps.extension.observable.eventdata.MapLoadingErrorEventData
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.*
 import com.mapbox.maps.plugin.attribution.attribution
+import com.mapbox.maps.plugin.delegates.listeners.OnMapLoadErrorListener
 import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.addOnMoveListener
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener
@@ -137,16 +140,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private fun updateMap() {
-        if (styleURL != null) {
-            mapboxMap?.loadStyleUri(styleURL!!) {
-                customizeMap()
-            }
-        } else {
-            customizeMap()
-        }
-    }
-
-    private fun customizeMap() {
         if (showUserLocation) {
             mapView?.location?.updateSettings {
                 enabled = true
@@ -156,7 +149,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         if (userLocatorMap != null) {
             mapView?.location?.locationPuck = LocationPuck2D(
-                topImage = userLocatorMap,
+                    topImage = userLocatorMap,
             )
         }
 
@@ -166,6 +159,16 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         addMarkers()
         addPolylines()
+
+        if (styleURL != null) {
+            mapboxMap?.loadStyleUri(styleURL!!, Style.OnStyleLoaded {
+                Log.i("MapboxNavigation", " Map style loaded")
+            }, onMapLoadErrorListener = object : OnMapLoadErrorListener {
+                override fun onMapLoadError(eventData: MapLoadingErrorEventData) {
+                    Log.e("MapboxNavigation", eventData.message)
+                }
+            })
+        }
     }
 
     private fun addPolylines() {
@@ -180,6 +183,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         val color = polylineInfo.getString("color")
                         val opacity =
                             if (polylineInfo.hasKey("opacity")) polylineInfo.getDouble("opacity") else 1.0
+
+                        if (polyline!!.size() < 2) {
+                            continue
+                        }
 
                         for (j in 0 until polyline!!.size()) {
                             val polylineArr = polyline.getArray(j)!!
@@ -341,11 +348,11 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         if (navigationToken != null
             && destination != null
             && mapView != null
+            && origin != null
         ) {
             isNavigation = true
             deletePolylines()
             setFollowUser(false)
-
             Handler(Looper.getMainLooper()).post {
                 mapboxNavigation =
                     MapboxNavigationNavigation(context, navigationToken!!, id, mapView!!)
@@ -519,7 +526,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setPolylines(polylines: ReadableArray?) {
         this.polylines = polylines
-        customizeMap()
+        updateMap()
     }
 
     fun onDropViewInstance() {
