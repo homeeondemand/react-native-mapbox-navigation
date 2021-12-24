@@ -118,7 +118,20 @@ class MapboxNavigationView: UIView {
             // Add the map.
             self.addSubview(mapView)
         }
-
+        
+        if styleURL != "" , let styleUri = URL(string: styleURL as String) {
+            mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!)
+        }
+        
+        cameraLocationConsumer = MapboxNavigationCameraLocationConsumer(mapView: mapView)
+        
+        self.addPolylines()
+        self.addPoints()
+        
+        if(markers.count == 0 && polylines.count == 0) {
+            self.setCamera()
+        }
+        
         if showUserLocation {
             if userLocatorMap != nil {
                 var puck2DConfiguration = Puck2DConfiguration()
@@ -131,18 +144,6 @@ class MapboxNavigationView: UIView {
                 mapView.location.options.puckType = .puck2D()
             }
             mapView.location.options.distanceFilter = 1
-        }
-        if styleURL != "" , let styleUri = URL(string: styleURL as String) {
-            mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!)
-        }
-        
-        cameraLocationConsumer = MapboxNavigationCameraLocationConsumer(mapView: mapView)
-        
-        self.addPolylines()
-        self.addPoints()
-        
-        if(markers.count == 0 && polylines.count == 0) {
-            self.setCamera()
         }
     }
     

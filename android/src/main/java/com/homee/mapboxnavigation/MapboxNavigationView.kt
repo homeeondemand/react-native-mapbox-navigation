@@ -35,6 +35,7 @@ import com.mapbox.navigation.ui.utils.internal.extensions.getBitmap
 
 @SuppressLint("ViewConstructor")
 class MapboxNavigationView(private val context: ThemedReactContext, private val mCallerContext: ReactApplicationContext): LinearLayout(context.baseContext) {
+    private val annotationLayerId = "mapbox-android-polylineAnnotation-layer-1"
     private var origin: Point? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
@@ -140,18 +141,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private fun updateMap() {
-        if (showUserLocation) {
-            mapView?.location?.updateSettings {
-                enabled = true
-                pulsingEnabled = false
-            }
-        }
-
-        if (userLocatorMap != null) {
-            mapView?.location?.locationPuck = LocationPuck2D(
-                    topImage = userLocatorMap,
-            )
-        }
 
         if (!this.isNavigation) {
             fitCameraForAnnotations()
@@ -159,7 +148,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         addMarkers()
         addPolylines()
+        applyStyle()
+    }
 
+    private fun applyStyle() {
         if (styleURL != null) {
             mapboxMap?.loadStyleUri(styleURL!!, Style.OnStyleLoaded {
                 Log.i("MapboxNavigation", " Map style loaded")
@@ -168,6 +160,24 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     Log.e("MapboxNavigation", eventData.message)
                 }
             })
+        }
+    }
+
+    private fun addLocator(withAnnotations: Boolean = false) {
+        if (showUserLocation) {
+            mapView?.location?.updateSettings {
+                enabled = true
+                pulsingEnabled = false
+                if (withAnnotations) {
+                    layerAbove = annotationLayerId
+                }
+
+                if (userLocatorMap != null) {
+                    locationPuck = LocationPuck2D(
+                        topImage = userLocatorMap,
+                    )
+                }
+            }
         }
     }
 
@@ -204,8 +214,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                             .withLineOpacity(opacity)
                         polylineAnnotation =
                             polylineAnnotationManager!!.create(polylineAnnotationOptions)
-
                     }
+                    addLocator(true)
+                } else {
+                    addLocator()
                 }
             }
         }
