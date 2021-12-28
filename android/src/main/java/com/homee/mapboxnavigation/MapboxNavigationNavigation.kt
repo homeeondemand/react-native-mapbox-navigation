@@ -64,6 +64,7 @@ import com.mapbox.navigation.ui.voice.model.SpeechValue
 import java.util.*
 
 class MapboxNavigationNavigation(private val context:ThemedReactContext, private val token: String, private val id: Int, private val mapView: MapView) {
+    public var followUser: Boolean = false
     private var shouldSimulate: Boolean = false
     private var useImperial: Boolean = false
     private var transportMode: String = "moto"
@@ -223,13 +224,15 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
 //            viewportDataSource.onLocationChanged(enhancedLocation)
 //            viewportDataSource.evaluate()
 
-            updateCamera(
-                Point.fromLngLat(
-                    enhancedLocation.longitude,
-                    enhancedLocation.latitude
-                ),
-                enhancedLocation.bearing.toDouble()
-            )
+            if (followUser) {
+                updateCamera(
+                    Point.fromLngLat(
+                        enhancedLocation.longitude,
+                        enhancedLocation.latitude
+                    ),
+                    enhancedLocation.bearing.toDouble()
+                )
+            }
         }
     }
 

@@ -65,7 +65,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var pointAnnotationManager: PointAnnotationManager? = null
 
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener { point ->
-        if (isNavigation || followUser) {
+        if (followUser) {
             val cameraOptions = CameraOptions.Builder()
                 .center(point)
                 .build()
@@ -75,7 +75,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     }
     private val onIndicatorBearingChangedListener = OnIndicatorBearingChangedListener { bearing ->
-        if (isNavigation) {
+        if (isNavigation && followUser) {
             val cameraOptions = CameraOptions.Builder()
                 .bearing(bearing)
                 .build()
@@ -416,6 +416,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setFollowUser(followUser: Boolean) {
         this.followUser = followUser
+        
+        if(mapboxNavigation != null) {
+            mapboxNavigation?.followUser = followUser
+        }
     }
 
     fun setUseImperial(useImperial: Boolean) {
