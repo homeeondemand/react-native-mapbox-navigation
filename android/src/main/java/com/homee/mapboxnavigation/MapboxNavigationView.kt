@@ -1,37 +1,40 @@
 package com.homee.mapboxnavigation
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import android.graphics.Color
-import android.widget.LinearLayout
-import com.facebook.react.uimanager.ThemedReactContext
-import com.mapbox.maps.plugin.LocationPuck2D
-import com.mapbox.maps.plugin.locationcomponent.location
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import com.mapbox.maps.plugin.compass.compass
-import java.net.URL
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.MotionEvent
+import android.widget.LinearLayout
 import com.facebook.react.bridge.*
+import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
 import com.mapbox.maps.*
 import com.mapbox.maps.extension.observable.eventdata.MapLoadingErrorEventData
+import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.*
 import com.mapbox.maps.plugin.attribution.attribution
+import com.mapbox.maps.plugin.compass.compass
 import com.mapbox.maps.plugin.delegates.listeners.OnMapLoadErrorListener
 import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.addOnMoveListener
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
+import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
 import com.mapbox.navigation.ui.utils.internal.extensions.getBitmap
+import java.net.URL
+
 
 @SuppressLint("ViewConstructor")
 class MapboxNavigationView(private val context: ThemedReactContext, private val mCallerContext: ReactApplicationContext): LinearLayout(context.baseContext) {
@@ -52,6 +55,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var showUserLocation = false
     private var markers: ReadableArray? = null
     private var polylines: ReadableArray? = null
+    private var smallRender = false
 
     var mapboxMap: MapboxMap? = null
     private var mapView: MapView? = null
@@ -168,7 +172,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             mapView?.location?.updateSettings {
                 enabled = true
                 pulsingEnabled = false
-                if (withAnnotations) {
+                if (withAnnotations && !isNavigation) {
                     layerAbove = annotationLayerId
                 }
 
@@ -297,15 +301,18 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
 
         if (points.size > 0) {
+            val mapWidth = mapView!!.width
+            val mapHeight = mapView!!.height
             val newCameraOptions = mapboxMap!!.cameraForCoordinates(
                 points,
                 EdgeInsets(
-                    if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 62.0 else 42.0,
-                    72.0,
-                    if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 168.0 else 32.0,
-                    72.0
+                    mapHeight * 0.20 + (if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 20 else 0),
+                        mapWidth * 0.1,
+                        mapHeight * 0.20 + (if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 136 else 0),
+                        mapWidth * 0.1,
                 )
             )
+            
             mapboxMap?.setCamera(newCameraOptions)
         } else {
             updateCamera()
@@ -545,15 +552,26 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         updateMap()
     }
 
+    fun setSmallRender(smallRender: Boolean = false) {
+        this.smallRender = smallRender
+    }
+
     fun onDropViewInstance() {
         mapView?.onDestroy()
+    }
+
+    private fun scaleDrawable(drawable: Drawable): Drawable {
+        val bitmap = (drawable as BitmapDrawable).bitmap
+        val ratio = if(smallRender) 80 else 100
+
+        return BitmapDrawable(resources, Bitmap.createScaledBitmap(bitmap, ratio, ratio, true))
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
     private fun getDrawableFromUri(imageUrl: String?): Drawable? {
         val drawable = if (imageUrl?.contains("http") == true) {
             val inputStream = URL(imageUrl).openStream()
-            Drawable.createFromStream(inputStream, "src")
+            scaleDrawable(Drawable.createFromStream(inputStream, "src"))
         } else {
             val resourceId = mCallerContext.resources.getIdentifier(
                 imageUrl,
@@ -561,10 +579,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 mCallerContext.packageName
             )
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                resources.getDrawable(
-                    resourceId,
-                    mCallerContext.theme
-                )
+                scaleDrawable(resources.getDrawable(resourceId, mCallerContext.theme))
             } else {
                 TODO("VERSION.SDK_INT < LOLLIPOP")
             }

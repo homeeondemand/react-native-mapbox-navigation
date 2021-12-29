@@ -131,4 +131,9 @@ class MapboxNavigationManager(private var mCallerContext: ReactApplicationContex
     fun setPolyline(view: MapboxNavigationView, polylines: ReadableArray?) {
         view.setPolylines(polylines)
     }
+
+    @ReactProp(name = "smallRender")
+    fun setPolyline(view: MapboxNavigationView, smallRender: Boolean = false) {
+        view.setSmallRender(smallRender)
+    }
 }
