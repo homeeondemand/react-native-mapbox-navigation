@@ -459,7 +459,6 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
 
     private fun generateRoute(origin: Point, destination: Point) {
         val routeOptions = RouteOptions.builder()
-            .enableRefresh(true)
             .profile(getTransportMode(transportMode))
             .overview(DirectionsCriteria.OVERVIEW_FULL)
             .applyLanguageAndVoiceUnitOptions(context)
@@ -467,7 +466,6 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
             .continueStraight(true)
             .voiceInstructions(true)
             .bannerInstructions(true)
-            .enableRefresh(true)
             .coordinatesList(listOf(origin, destination))
             .build()
 
