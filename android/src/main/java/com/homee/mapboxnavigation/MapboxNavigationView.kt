@@ -33,12 +33,14 @@ import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
 import com.mapbox.navigation.ui.utils.internal.extensions.getBitmap
+import java.lang.RuntimeException
 import java.net.URL
 
 
 @SuppressLint("ViewConstructor")
 class MapboxNavigationView(private val context: ThemedReactContext, private val mCallerContext: ReactApplicationContext): LinearLayout(context.baseContext) {
     private val annotationLayerId = "mapbox-android-polylineAnnotation-layer-1"
+    private var annotationLayerDisplayed = false
     private var origin: Point? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
@@ -159,6 +161,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         if (styleURL != null) {
             mapboxMap?.loadStyleUri(styleURL!!, Style.OnStyleLoaded {
                 Log.i("MapboxNavigation", " Map style loaded")
+                annotationLayerDisplayed = false
+                for( layer in it.styleLayers) {
+                    Log.w("MapboxNavigation", layer.id)
+                    if(layer.id == annotationLayerId) {
+                        annotationLayerDisplayed = true
+                    }
+                }
             }, onMapLoadErrorListener = object : OnMapLoadErrorListener {
                 override fun onMapLoadError(eventData: MapLoadingErrorEventData) {
                     Log.e("MapboxNavigation", eventData.message)
@@ -172,7 +181,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             mapView?.location?.updateSettings {
                 enabled = true
                 pulsingEnabled = false
-                if (withAnnotations && !isNavigation) {
+
+                if (withAnnotations && !isNavigation && annotationLayerDisplayed) {
                     layerAbove = annotationLayerId
                 }
 
