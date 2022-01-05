@@ -196,7 +196,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private fun addPolylines() {
-        Handler(Looper.getMainLooper()).post {
             if (mapView != null) {
                 deletePolylines()
                 if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
@@ -234,11 +233,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     addLocator()
                 }
             }
-        }
     }
 
     private fun addMarkers() {
-        Handler(Looper.getMainLooper()).post {
             if (mapView != null) {
                 if (markers != null && markers!!.size() > 0) {
                     DoAsync {
@@ -271,7 +268,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         pointAnnotation = null
                     }
                 }
-            }
         }
     }
 
