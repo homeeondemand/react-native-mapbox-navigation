@@ -147,14 +147,15 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private fun updateMap() {
+        Handler(Looper.getMainLooper()).post {
+            if (!this.isNavigation) {
+                fitCameraForAnnotations()
+            }
 
-        if (!this.isNavigation) {
-            fitCameraForAnnotations()
+            addMarkers()
+            addPolylines()
+            applyStyle()
         }
-
-        addMarkers()
-        addPolylines()
-        applyStyle()
     }
 
     private fun applyStyle() {
