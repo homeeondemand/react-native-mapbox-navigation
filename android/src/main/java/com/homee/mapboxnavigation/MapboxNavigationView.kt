@@ -151,10 +151,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             if (!this.isNavigation) {
                 fitCameraForAnnotations()
             }
+            applyStyle()
 
             addMarkers()
             addPolylines()
-            applyStyle()
         }
     }
 
@@ -178,19 +178,23 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     private fun addLocator(withAnnotations: Boolean = false) {
         if (showUserLocation) {
-            mapView?.location?.updateSettings {
-                enabled = true
-                pulsingEnabled = false
+            try {
+                mapView?.location?.updateSettings {
+                    enabled = true
+                    pulsingEnabled = false
 
-                if (withAnnotations && !isNavigation && annotationLayerDisplayed) {
-                    layerAbove = annotationLayerId
-                }
+                    if (withAnnotations && !isNavigation && annotationLayerDisplayed) {
+                        layerAbove = annotationLayerId
+                    }
 
-                if (userLocatorMap != null) {
-                    locationPuck = LocationPuck2D(
-                        topImage = userLocatorMap,
-                    )
+                    if (userLocatorMap != null) {
+                        locationPuck = LocationPuck2D(
+                                topImage = userLocatorMap,
+                        )
+                    }
                 }
+            } catch (e: RuntimeException) {
+                Log.e("MapboxNavigation", e.toString())
             }
         }
     }
@@ -199,6 +203,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             if (mapView != null) {
                 deletePolylines()
                 if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
+                    Log.w("MapboxNavigation ps", polylines!!.size().toString())
                     for (i in 0 until polylines!!.size()) {
                         val coordinates = mutableListOf<Point>()
                         val polylineInfo = polylines!!.getMap(i)!!
@@ -207,6 +212,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         val opacity =
                             if (polylineInfo.hasKey("opacity")) polylineInfo.getDouble("opacity") else 1.0
 
+                        Log.w("MapboxNavigation p", polyline!!.size().toString())
                         if (polyline!!.size() < 2) {
                             continue
                         }
@@ -228,9 +234,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         polylineAnnotation =
                             polylineAnnotationManager!!.create(polylineAnnotationOptions)
                     }
-                    addLocator(true)
+//                    addLocator(true)
                 } else {
-                    addLocator()
+//                    addLocator()
                 }
             }
     }
@@ -546,7 +552,24 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setShowUserLocation(showUserLocation: Boolean) {
         this.showUserLocation = showUserLocation
-        updateMap()
+        mapView?.location?.updateSettings {
+            pulsingEnabled = false
+            if (showUserLocation) {
+                enabled = true
+
+                if (!isNavigation && annotationLayerDisplayed) {
+                    layerAbove = annotationLayerId
+                }
+
+                if (userLocatorMap != null) {
+                    locationPuck = LocationPuck2D(
+                            topImage = userLocatorMap,
+                    )
+                }
+            } else {
+                enabled = false
+            }
+        }
     }
 
     fun setMarkers(markers: ReadableArray?) {
