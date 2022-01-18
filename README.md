@@ -80,7 +80,9 @@ Build Settings Screenshot 2
 
 </details>
 
-Place your public token in your Xcode project's `Info.plist` and add a `MGLMapboxAccessToken` key whose value is your public access token.
+Place your public token in your Xcode project's `Info.plist` and add a `MBXAccessToken` key whose value is your public access token.
+
+NOTE:  `MGLMapboxAccessToken` is deprecated, now you should use `MBXAccessToken` instead
 
 Add the `UIBackgroundModes` key to `Info.plist` with `audio` and `location` if it is not already present. This will allow your app to deliver audible instructions while it is in the background or the device is locked.
 
