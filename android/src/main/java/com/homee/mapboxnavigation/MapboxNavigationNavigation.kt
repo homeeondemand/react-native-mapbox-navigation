@@ -485,7 +485,7 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
         val routeOptions = RouteOptions.builder()
             .profile(getTransportMode(transportMode))
             .overview(DirectionsCriteria.OVERVIEW_FULL)
-//            .applyLanguageAndVoiceUnitOptions(context)
+            .voiceUnits(if(useImperial) DirectionsCriteria.IMPERIAL else DirectionsCriteria.METRIC)
             .steps(true)
             .language(language)
             .continueStraight(true)
