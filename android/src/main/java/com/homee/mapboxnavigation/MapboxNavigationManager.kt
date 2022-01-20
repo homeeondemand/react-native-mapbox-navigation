@@ -48,6 +48,11 @@ class MapboxNavigationManager(private var mCallerContext: ReactApplicationContex
         view.setNavigationToken(navigationToken)
     }
 
+    @ReactProp(name = "language")
+    fun setLanguage(view: MapboxNavigationView, language: String) {
+        view.setLanguage(language)
+    }
+
     @ReactProp(name = "origin")
     fun setOrigin(view: MapboxNavigationView, sources: ReadableArray?) {
         if (sources == null || sources.toArrayList().filterNotNull().count() == 0) {
@@ -64,6 +69,11 @@ class MapboxNavigationManager(private var mCallerContext: ReactApplicationContex
             return
         }
         view.setDestination(Point.fromLngLat(sources.getDouble(1), sources.getDouble(0)))
+    }
+
+    @ReactProp(name = "voiceEnabled")
+    fun setVoiceEnabled(view: MapboxNavigationView, voiceEnabled: Boolean) {
+        view.setVoiceEnabled(voiceEnabled)
     }
 
     @ReactProp(name = "shouldSimulateRoute")

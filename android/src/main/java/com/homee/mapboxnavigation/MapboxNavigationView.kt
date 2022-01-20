@@ -54,7 +54,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var userLocatorNavigation: Drawable? = null
     private var styleURL: String? = null
     private var transportMode: String = "bike"
+    private var language: String = ""
     private var showUserLocation = false
+    private var voiceEnabled = false
     private var markers: ReadableArray? = null
     private var polylines: ReadableArray? = null
     private var smallRender = false
@@ -176,104 +178,78 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
     }
 
-    private fun addLocator(withAnnotations: Boolean = false) {
-        if (showUserLocation) {
-            try {
-                mapView?.location?.updateSettings {
-                    enabled = true
-                    pulsingEnabled = false
+    private fun addPolylines() {
+        if (mapView != null) {
+            deletePolylines()
+            if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
+                Log.w("MapboxNavigation ps", polylines!!.size().toString())
+                for (i in 0 until polylines!!.size()) {
+                    val coordinates = mutableListOf<Point>()
+                    val polylineInfo = polylines!!.getMap(i)!!
+                    val polyline = polylineInfo.getArray("coordinates")
+                    val color = polylineInfo.getString("color")
+                    val opacity =
+                        if (polylineInfo.hasKey("opacity")) polylineInfo.getDouble("opacity") else 1.0
 
-                    if (withAnnotations && !isNavigation && annotationLayerDisplayed) {
-                        layerAbove = annotationLayerId
+                    Log.w("MapboxNavigation p", polyline!!.size().toString())
+                    if (polyline!!.size() < 2) {
+                        continue
                     }
 
-                    if (userLocatorMap != null) {
-                        locationPuck = LocationPuck2D(
-                                topImage = userLocatorMap,
-                        )
+                    for (j in 0 until polyline!!.size()) {
+                        val polylineArr = polyline.getArray(j)!!
+                        val lat = polylineArr.getDouble(0)
+                        val lng = polylineArr.getDouble(1)
+                        val point = Point.fromLngLat(lng, lat)
+
+                        coordinates.add(point)
                     }
+
+                    val polylineAnnotationOptions = PolylineAnnotationOptions()
+                        .withPoints(coordinates)
+                        .withLineColor(color ?: "#00AA8D")
+                        .withLineWidth(5.0)
+                        .withLineOpacity(opacity)
+                    polylineAnnotation =
+                        polylineAnnotationManager!!.create(polylineAnnotationOptions)
                 }
-            } catch (e: RuntimeException) {
-                Log.e("MapboxNavigation", e.toString())
             }
         }
     }
 
-    private fun addPolylines() {
-            if (mapView != null) {
-                deletePolylines()
-                if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
-                    Log.w("MapboxNavigation ps", polylines!!.size().toString())
-                    for (i in 0 until polylines!!.size()) {
-                        val coordinates = mutableListOf<Point>()
-                        val polylineInfo = polylines!!.getMap(i)!!
-                        val polyline = polylineInfo.getArray("coordinates")
-                        val color = polylineInfo.getString("color")
-                        val opacity =
-                            if (polylineInfo.hasKey("opacity")) polylineInfo.getDouble("opacity") else 1.0
+    private fun addMarkers() {
+        if (mapView != null) {
+            if (markers != null && markers!!.size() > 0) {
+                DoAsync {
+                    for (i in 0 until markers!!.size()) {
+                        val marker = markers!!.getMap(i)!!
 
-                        Log.w("MapboxNavigation p", polyline!!.size().toString())
-                        if (polyline!!.size() < 2) {
-                            continue
+                        if (!marker.hasKey("latitude") || !marker.hasKey("longitude")) continue
+
+                        val markerLatitude = marker.getDouble("latitude")
+                        val markerLongitude = marker.getDouble("longitude")
+
+                        val markerIcon = marker.getMap("image")!!
+                        val markerUrl = markerIcon.getString("uri") ?: return@DoAsync
+                        val icon = getDrawableFromUri(markerUrl)
+                        val point = Point.fromLngLat(markerLongitude, markerLatitude)
+                        val pointAnnotationOptions: PointAnnotationOptions =
+                            PointAnnotationOptions()
+                                .withPoint(point)
+
+                        if (icon !== null) {
+                            pointAnnotationOptions.withIconImage(icon.getBitmap())
                         }
 
-                        for (j in 0 until polyline!!.size()) {
-                            val polylineArr = polyline.getArray(j)!!
-                            val lat = polylineArr.getDouble(0)
-                            val lng = polylineArr.getDouble(1)
-                            val point = Point.fromLngLat(lng, lat)
-
-                            coordinates.add(point)
-                        }
-
-                        val polylineAnnotationOptions = PolylineAnnotationOptions()
-                            .withPoints(coordinates)
-                            .withLineColor(color ?: "#00AA8D")
-                            .withLineWidth(5.0)
-                            .withLineOpacity(opacity)
-                        polylineAnnotation =
-                            polylineAnnotationManager!!.create(polylineAnnotationOptions)
+                        pointAnnotation = pointAnnotationManager?.create(pointAnnotationOptions)
                     }
-//                    addLocator(true)
-                } else {
-//                    addLocator()
+                }
+            } else {
+                if (pointAnnotation != null) {
+                    pointAnnotationManager?.deleteAll()
+                    pointAnnotation = null
                 }
             }
-    }
-
-    private fun addMarkers() {
-            if (mapView != null) {
-                if (markers != null && markers!!.size() > 0) {
-                    DoAsync {
-                        for (i in 0 until markers!!.size()) {
-                            val marker = markers!!.getMap(i)!!
-
-                            if (!marker.hasKey("latitude") || !marker.hasKey("longitude")) continue
-
-                            val markerLatitude = marker.getDouble("latitude")
-                            val markerLongitude = marker.getDouble("longitude")
-
-                            val markerIcon = marker.getMap("image")!!
-                            val markerUrl = markerIcon.getString("uri") ?: return@DoAsync
-                            val icon = getDrawableFromUri(markerUrl)
-                            val point = Point.fromLngLat(markerLongitude, markerLatitude)
-                            val pointAnnotationOptions: PointAnnotationOptions =
-                                PointAnnotationOptions()
-                                    .withPoint(point)
-
-                            if (icon !== null) {
-                                pointAnnotationOptions.withIconImage(icon.getBitmap())
-                            }
-
-                            pointAnnotation = pointAnnotationManager?.create(pointAnnotationOptions)
-                        }
-                    }
-                } else {
-                    if (pointAnnotation != null) {
-                        pointAnnotationManager?.deleteAll()
-                        pointAnnotation = null
-                    }
-                }
         }
     }
 
@@ -392,7 +368,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     destination!!,
                     transportMode,
                     shouldSimulateRoute,
-                    useImperial
+                    useImperial,
+                    language,
+                    voiceEnabled,
+                    userLocatorNavigation,
                 )
             }
         }
@@ -445,12 +424,20 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         this.useImperial = useImperial
     }
 
+    fun setVoiceEnabled(voiceEnabled: Boolean) {
+        this.voiceEnabled = voiceEnabled
+    }
+
     fun setShouldSimulateRoute(shouldSimulateRoute: Boolean) {
         this.shouldSimulateRoute = shouldSimulateRoute
     }
 
     fun setShowsEndOfRouteFeedback(showsEndOfRouteFeedback: Boolean) {
         this.showsEndOfRouteFeedback = showsEndOfRouteFeedback
+    }
+
+    fun setLanguage(language: String) {
+        this.language = language
     }
 
     fun setMapToken(mapToken: String) {

@@ -2,6 +2,7 @@ package com.homee.mapboxnavigation
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.location.Location
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
@@ -16,12 +17,12 @@ import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
+import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.navigation.base.TimeFormat
-import com.mapbox.navigation.base.extensions.applyLanguageAndVoiceUnitOptions
 import com.mapbox.navigation.base.formatter.DistanceFormatterOptions
 import com.mapbox.navigation.base.formatter.UnitType
 import com.mapbox.navigation.base.options.NavigationOptions
@@ -59,6 +60,7 @@ import com.mapbox.navigation.ui.tripprogress.api.MapboxTripProgressApi
 import com.mapbox.navigation.ui.tripprogress.model.*
 import com.mapbox.navigation.ui.voice.api.MapboxSpeechApi
 import com.mapbox.navigation.ui.voice.api.MapboxVoiceInstructionsPlayer
+import com.mapbox.navigation.ui.voice.model.SpeechAnnouncement
 import com.mapbox.navigation.ui.voice.model.SpeechError
 import com.mapbox.navigation.ui.voice.model.SpeechValue
 import java.util.*
@@ -133,6 +135,10 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
         speechApi.generate(voiceInstructions, speechCallback)
     }
 
+    private val voiceInstructionsPlayerCallback = MapboxNavigationConsumer<SpeechAnnouncement> { value ->
+        speechApi.clean(value)
+    }
+
     /**
      * Based on whether the synthesized audio file is available, the callback plays the file
      * or uses the fall back which is played back using the on-device Text-To-Speech engine.
@@ -140,11 +146,20 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
     private val speechCallback =
         MapboxNavigationConsumer<Expected<SpeechError, SpeechValue>> { expected ->
             expected.fold(
-                { _ ->
+                { error ->
                     // play the instruction via fallback text-to-speech engine
+                    voiceInstructionsPlayer.play(
+                            error.fallback,
+                            voiceInstructionsPlayerCallback
+                    )
                 },
-                { _ ->
-                    // play the sound file from the external generator
+                { value ->
+                    // The announcement data obtained (synthesized speech mp3 file from Mapbox's API Voice) is played
+                    // using [MapboxVoiceInstructionsPlayer]
+                    voiceInstructionsPlayer.play(
+                            value.announcement,
+                            voiceInstructionsPlayerCallback
+                    )
                 }
             )
         }
@@ -324,13 +339,24 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
     }
 
     @SuppressLint("MissingPermission")
-    fun startNavigation(origin: Point, destination: Point, transportMode: String, shouldSimulate: Boolean, useImperial: Boolean) {
+    fun startNavigation(origin: Point, destination: Point, transportMode: String, shouldSimulate: Boolean, useImperial: Boolean, language: String, voiceEnabled: Boolean, userLocatorNavigation: Drawable?) {
         updateCamera(origin)
         this.shouldSimulate = shouldSimulate
         this.transportMode = transportMode
         this.useImperial = useImperial
 
         mapboxMap = mapView.getMapboxMap()
+
+        mapView.location.apply {
+            setLocationProvider(navigationLocationProvider)
+
+            if (userLocatorNavigation != null) {
+                locationPuck = LocationPuck2D(
+                        bearingImage = userLocatorNavigation,
+                )
+            }
+            enabled = true
+        }
 
         // initialize the location puck
 //        mapView.location.apply {
@@ -402,18 +428,16 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
                 .build()
         )
 
-        val locale = context.resources.configuration.locales[0]
-
         // initialize voice instructions api and the voice instruction player
         speechApi = MapboxSpeechApi(
-            context,
-            token,
-            locale.language
+                context.applicationContext,
+                token,
+                language
         )
         voiceInstructionsPlayer = MapboxVoiceInstructionsPlayer(
-            context,
-            token,
-            locale.language
+                context.applicationContext,
+                token,
+                language
         )
 
         // initialize maneuver arrow view to draw arrows on the map
@@ -424,7 +448,7 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
         // and later when a route is set also receiving route progress updates
         mapboxNavigation!!.startTripSession()
 
-        generateRoute(origin, destination)
+        generateRoute(origin, destination, language, voiceEnabled)
     }
 
     fun stopNavigation() {
@@ -457,14 +481,15 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
         unregisterListeners()
     }
 
-    private fun generateRoute(origin: Point, destination: Point) {
+    private fun generateRoute(origin: Point, destination: Point, language: String, voiceEnabled: Boolean) {
         val routeOptions = RouteOptions.builder()
             .profile(getTransportMode(transportMode))
             .overview(DirectionsCriteria.OVERVIEW_FULL)
-            .applyLanguageAndVoiceUnitOptions(context)
+//            .applyLanguageAndVoiceUnitOptions(context)
             .steps(true)
+            .language(language)
             .continueStraight(true)
-            .voiceInstructions(true)
+            .voiceInstructions(voiceEnabled)
             .bannerInstructions(true)
             .coordinatesList(listOf(origin, destination))
             .build()

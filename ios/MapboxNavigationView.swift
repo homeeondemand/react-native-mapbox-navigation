@@ -66,6 +66,8 @@ class MapboxNavigationView: UIView {
     @objc var transportMode: NSString = "bike"
     @objc var navigationToken: NSString = ""
     @objc var showsEndOfRouteFeedback: Bool = false
+    @objc var language: NSString = ""
+    @objc var voiceEnabled: Bool = false
     @objc var destinationMarker: NSDictionary?
     @objc var userLocatorMap: NSDictionary?
     @objc var userLocatorNavigation: NSDictionary?
@@ -317,7 +319,8 @@ class MapboxNavigationView: UIView {
             let destinationWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: CLLocationDegrees(destination?[0] as! CGFloat), longitude: CLLocationDegrees(destination?[1] as! CGFloat)))
             
             let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint])
-            options.includesSpokenInstructions = false
+            options.includesSpokenInstructions = voiceEnabled
+            options.locale = Locale(identifier: String(language))
             options.profileIdentifier = getTransportMode(transportMode: transportMode)
             options.distanceMeasurementSystem = useImperial ? .imperial : .metric
             
