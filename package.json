@@ -5,6 +5,7 @@
   "description": "Smart Mapbox turn-by-turn routing based on real-time traffic for React Native.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "source": "src/index",
   "scripts": {
     "prepublishOnly": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -27,12 +28,12 @@
   },
   "homepage": "https://github.com/homeeondemand/react-native-mapbox-navigation#readme",
   "peerDependencies": {
-    "react": "^16.8.1",
-    "react-native": ">=0.60.0-rc.0 <1.0.x"
+    "react": "*",
+    "react-native": "*"
   },
   "devDependencies": {
     "react": "^16.8.1",
-    "react-native": ">=0.60.0-rc.0 <1.0.x",
+    "react-native": "0.63.4",
     "typescript": "4.3.5"
   }
 }
