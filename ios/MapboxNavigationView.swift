@@ -19,12 +19,11 @@ extension UIView {
 }
 
 class MapboxNavigationView: UIView {
-    weak var navViewController: NavigationViewController?
+    var navigationViewController: NavigationViewController?
     internal var mapView: MapView!
     internal var cameraLocationConsumer: MapboxNavigationCameraLocationConsumer!
     private var lineAnnotationManager: PolylineAnnotationManager?
     private var pointAnnotationManager: PointAnnotationManager?
-    private var navigationService: MapboxNavigationService?
     
     @objc var origin: NSArray = [] {
         didSet { setNeedsLayout() }
@@ -96,13 +95,13 @@ class MapboxNavigationView: UIView {
 
         renderMap()
         
-        navViewController?.view.frame = bounds
+        navigationViewController?.view.frame = bounds
     }
     
     override func removeFromSuperview() {
         super.removeFromSuperview()
         // cleanup and teardown any existing resources
-        self.navViewController?.removeFromParent()
+        self.navigationViewController?.removeFromParent()
     }
     
     private func renderMap() {
@@ -340,27 +339,26 @@ class MapboxNavigationView: UIView {
                         return
                     }
                     
-                    strongSelf.navigationService = MapboxNavigationService(routeResponse: response,
+                    let navigationService = MapboxNavigationService(routeResponse: response,
                                                                     routeIndex: 0,
                                                                     routeOptions: options,
                                                                     simulating: strongSelf.shouldSimulateRoute ? .always : .never)
-                    strongSelf.navigationService!.simulationSpeedMultiplier = 5
+                    navigationService.simulationSpeedMultiplier = 5
                     
-                    let navigationOptions = NavigationOptions(navigationService: strongSelf.navigationService!)
-                    navigationOptions.navigationService = strongSelf.navigationService!
+                    let navigationOptions = NavigationOptions(navigationService: navigationService)
                     navigationOptions.bottomBanner = MapboxNavigationBannerView()
                     navigationOptions.topBanner = MapboxNavigationBannerView()
                     
-                    let navigationViewController = NavigationViewController(for: response, routeIndex: 0,
+                    strongSelf.navigationViewController = NavigationViewController(for: response, routeIndex: 0,
                                                                             routeOptions: options,
                                                                             navigationOptions: navigationOptions)
                     
-                    if let mapView = navigationViewController.navigationMapView?.mapView {
+                    if let mapView = strongSelf.navigationViewController!.navigationMapView?.mapView {
                         let customViewportDataSource = MapboxNavigationViewportDataSource(mapView)
-                        navigationViewController.navigationMapView?.navigationCamera.viewportDataSource = customViewportDataSource
+                        strongSelf.navigationViewController!.navigationMapView?.navigationCamera.viewportDataSource = customViewportDataSource
             
                         let customCameraStateTransition = MapboxNavigationCameraStateTransition(mapView)
-                        navigationViewController.navigationMapView?.navigationCamera.cameraStateTransition = customCameraStateTransition
+                        strongSelf.navigationViewController!.navigationMapView?.navigationCamera.cameraStateTransition = customCameraStateTransition
                     }
                 
                     if strongSelf.styleURL != "" , let styleUri = URL(string: strongSelf.styleURL as String) {
@@ -375,45 +373,45 @@ class MapboxNavigationView: UIView {
                     
                         let userLocationStyle = UserLocationStyle.puck2D(configuration: puck2DConfiguration)
                     
-                        navigationViewController.navigationMapView?.userLocationStyle = userLocationStyle
+                        strongSelf.navigationViewController!.navigationMapView?.userLocationStyle = userLocationStyle
                     }
                     
                     if strongSelf.styleURL != "" , let styleUri = URL(string: strongSelf.styleURL as String) {
-                        navigationViewController.navigationMapView?.mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!)
+                        strongSelf.navigationViewController!.navigationMapView?.mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!)
                     }
                     WayNameLabel.appearance().normalTextColor = UIColor.clear
                     WayNameView.appearance().backgroundColor = UIColor.clear
                     WayNameView.appearance().borderColor = UIColor.clear
                     
-                    navigationViewController.routeLineTracksTraversal = true
-                    navigationViewController.navigationMapView?.routeCasingColor = #colorLiteral(red: 0.2078881264, green: 0.6503844261, blue: 0.5409962535, alpha: 1)
-                    navigationViewController.navigationMapView?.traversedRouteColor = UIColor.clear
+                    strongSelf.navigationViewController!.routeLineTracksTraversal = true
+                    strongSelf.navigationViewController!.navigationMapView?.routeCasingColor = #colorLiteral(red: 0.2078881264, green: 0.6503844261, blue: 0.5409962535, alpha: 1)
+                    strongSelf.navigationViewController!.navigationMapView?.traversedRouteColor = UIColor.clear
                     
-                    navigationViewController.navigationMapView?.trafficLowColor = UIColor.clear
-                    navigationViewController.navigationMapView?.trafficHeavyColor = UIColor.clear
-                    navigationViewController.navigationMapView?.trafficSevereColor = UIColor.clear
-                    navigationViewController.navigationMapView?.trafficUnknownColor = UIColor.clear
-                    navigationViewController.navigationMapView?.trafficModerateColor = UIColor.clear
-                    navigationViewController.navigationMapView?.alternativeTrafficLowColor = UIColor.clear
-                    navigationViewController.navigationMapView?.alternativeTrafficHeavyColor = UIColor.clear
-                    navigationViewController.navigationMapView?.alternativeTrafficSevereColor = UIColor.clear
-                    navigationViewController.navigationMapView?.alternativeTrafficUnknownColor = UIColor.clear
-                    navigationViewController.navigationMapView?.alternativeTrafficModerateColor = UIColor.clear
+                    strongSelf.navigationViewController!.navigationMapView?.trafficLowColor = UIColor.clear
+                    strongSelf.navigationViewController!.navigationMapView?.trafficHeavyColor = UIColor.clear
+                    strongSelf.navigationViewController!.navigationMapView?.trafficSevereColor = UIColor.clear
+                    strongSelf.navigationViewController!.navigationMapView?.trafficUnknownColor = UIColor.clear
+                    strongSelf.navigationViewController!.navigationMapView?.trafficModerateColor = UIColor.clear
+                    strongSelf.navigationViewController!.navigationMapView?.alternativeTrafficLowColor = UIColor.clear
+                    strongSelf.navigationViewController!.navigationMapView?.alternativeTrafficHeavyColor = UIColor.clear
+                    strongSelf.navigationViewController!.navigationMapView?.alternativeTrafficSevereColor = UIColor.clear
+                    strongSelf.navigationViewController!.navigationMapView?.alternativeTrafficUnknownColor = UIColor.clear
+                    strongSelf.navigationViewController!.navigationMapView?.alternativeTrafficModerateColor = UIColor.clear
                     
-                    navigationViewController.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
-                    navigationViewController.floatingButtons = []
-                    navigationViewController.showsReportFeedback = false
-                    navigationViewController.showsSpeedLimits = false
-                    navigationViewController.delegate = strongSelf
+                    strongSelf.navigationViewController!.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
+                    strongSelf.navigationViewController!.floatingButtons = []
+                    strongSelf.navigationViewController!.showsReportFeedback = false
+                    strongSelf.navigationViewController!.showsSpeedLimits = false
+                    strongSelf.navigationViewController!.delegate = strongSelf
                     
                     
-                    hideMapInfo(navigationViewController.navigationMapView?.mapView)
-                    strongSelf.addGestureListener(navigationViewController.navigationMapView?.mapView)
+                    hideMapInfo(strongSelf.navigationViewController!.navigationMapView?.mapView)
+                    strongSelf.addGestureListener(strongSelf.navigationViewController!.navigationMapView?.mapView)
                     
-                    navigationViewController.view.frame = strongSelf.bounds
-                    parentVC.addChild(navigationViewController)
-                    strongSelf.addSubview(navigationViewController.view)
-                    navigationViewController.didMove(toParent: parentVC)
+                    strongSelf.navigationViewController!.view.frame = strongSelf.bounds
+                    parentVC.addChild(strongSelf.navigationViewController!)
+                    strongSelf.addSubview(strongSelf.navigationViewController!.view)
+                    strongSelf.navigationViewController!.didMove(toParent: parentVC)
                     
                 }
             }
@@ -422,9 +420,11 @@ class MapboxNavigationView: UIView {
     
     func stopNavigation() {
         DispatchQueue.main.async {
-            self.navigationService?.stop()
-            self.navViewController?.didTapCancel("stop")
-            self.mapView = nil
+            if(self.navigationViewController != nil) {
+                self.navigationViewController!.removeFromParent()
+                self.removeReactSubview(self.navigationViewController!.view)
+            }
+            
             self.setNeedsLayout()
         }
     }
