@@ -318,7 +318,7 @@ DEPENDENCIES:
   - React-jsi (from `../node_modules/react-native/ReactCommon/jsi`)
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
-  - react-native-mapbox-navigation (from `../../../`)
+  - react-native-mapbox-navigation (from `../../`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -381,7 +381,7 @@ EXTERNAL SOURCES:
   React-jsinspector:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   react-native-mapbox-navigation:
-    :path: "../../../"
+    :path: "../../"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -413,7 +413,7 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
   FBLazyVector: e686045572151edef46010a6f819ade377dfeb4b
-  FBReactNativeSpec: aa6a64a8bdef853047406b691ffb39ac71692f04
+  FBReactNativeSpec: 50a9a7d4adf36103fd52accf0800547c88968e4c
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
   MapboxCommon: f15bb4cc4810d8d72e2d72bf2295f3f0cb328b11
   MapboxCoreMaps: ee3d7f31efbbafe81ce33907b6a96066e111a244
@@ -453,6 +453,6 @@ SPEC CHECKSUMS:
   Turf: d1220730a00b50a9fb5862c1fb6a5dd698c9e367
   Yoga: 575c581c63e0d35c9a83f4b46d01d63abc1100ac
 
-PODFILE CHECKSUM: 265b9148ca92da798d276dcb3e8cf6bd9f16fd0b
+PODFILE CHECKSUM: 9a83aa20708c0360835289086eed5957a73cb093
 
 COCOAPODS: 1.10.1

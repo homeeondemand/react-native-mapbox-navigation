@@ -6,7 +6,7 @@ install! 'cocoapods', :disable_input_output_paths => true
 
 target 'BasicApp' do
   config = use_native_modules!
-  pod 'react-native-mapbox-navigation', :path => '../../../', :inhibit_warnings => false
+  pod 'react-native-mapbox-navigation', :path => '../../', :inhibit_warnings => false
   $ReactNativeMapboxGLIOSVersion = '~> 8.5.0'
 
   use_react_native!(
