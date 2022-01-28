@@ -28,8 +28,6 @@ RCT_EXPORT_VIEW_PROPERTY(followUser, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(showUserLocation, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(shouldSimulateRoute, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(showsEndOfRouteFeedback, BOOL)
-RCT_EXPORT_VIEW_PROPERTY(language, NSString)
-RCT_EXPORT_VIEW_PROPERTY(voiceEnabled, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(markers, NSArray)
 RCT_EXPORT_VIEW_PROPERTY(polylines, NSArray)
 RCT_EXPORT_VIEW_PROPERTY(useImperial, BOOL)
@@ -39,5 +37,10 @@ RCT_EXTERN_METHOD(stopNavigation)
 RCT_EXTERN_METHOD(startTracking)
 RCT_EXTERN_METHOD(stopTracking)
 RCT_EXTERN_METHOD(setCamera:(NSDictionary *) camera)
+
+RCT_EXPORT_METHOD(captureScreenshot:(RCTResponseSenderBlock)callback)
+{
+ RCTLogInfo(@"Not implemented on iOS");
+}
 
 @end
