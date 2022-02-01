@@ -4,36 +4,35 @@ import {StyleSheet, View} from 'react-native';
 import MapboxNavigation from '@homee/react-native-mapbox-navigation';
 
 const Navigation = props => {
-  const {origin, destination, onCancelNavigation = undefined} = props;
+  const {origin, destination} = props;
 
   return (
     <View style={styles.container}>
       <View style={styles.mapContainer}>
         <MapboxNavigation
+          showsEndOfRouteFeedback={true}
+          shouldSimulateRoute={true}
           origin={origin}
           destination={destination}
           showsEndOfRouteFeedback={false}
           hideStatusView
-          onLocationChange={_event => {
-            // const { latitude, longitude } = event.nativeEvent;
+          onLocationChange={event => {
+            console.log('onLocationChange', event.nativeEvent);
           }}
-          onRouteProgressChange={_event => {
-            // const {
-            //   distanceTraveled,
-            //   durationRemaining,d
-            //   fractionTraveled,
-            //   distanceRemaining
-            // } = event.nativeEvent;
+          onRouteProgressChange={event => {
+            console.log('onRouteProgressChange', event.nativeEvent);
           }}
           onError={event => {
             const {message} = event.nativeEvent;
             // eslint-disable-next-line no-alert
             alert(message);
           }}
-          onCancelNavigation={() => onCancelNavigation && onCancelNavigation()}
           onArrive={() => {
             // eslint-disable-next-line no-alert
-            //alert('You have reached your destination');
+            alert('You have reached your destination');
+          }}
+          onCancelNavigation={event => {
+            alert('Cancelled navigation event');
           }}
         />
       </View>

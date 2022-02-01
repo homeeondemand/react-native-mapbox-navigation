@@ -6,16 +6,13 @@
  * @flow strict-local
  */
 
-import React, {useState, useLayoutEffect} from 'react';
+import React, {useEffect} from 'react';
 import {SafeAreaView, useColorScheme} from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import NavigationComponent from './NavigationComponent';
 import {PermissionsAndroid} from 'react-native';
 
 const App = () => {
-  const [locationPermissionGranted, setLocationPermissionGranted] =
-    useState(false);
-
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
@@ -23,23 +20,20 @@ const App = () => {
     flex: 1,
   };
 
-  useLayoutEffect(async () => {
-    async function requestLocationPermission() {
+  useEffect(() => {
+    const requestLocationPermission = async () => {
       try {
-        const granted = await PermissionsAndroid.request(
+        await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
             title: 'Example App',
             message: 'Example App access to your location ',
           },
         );
-        if (granted) {
-          setLocationPermissionGranted(true);
-        }
       } catch (err) {
         console.warn(err);
       }
-    }
+    };
 
     requestLocationPermission();
   }, []);
@@ -47,9 +41,8 @@ const App = () => {
   return (
     <SafeAreaView style={backgroundStyle}>
       <NavigationComponent
-        origin={[-100.2487974, 25.5977387]}
-        destination={[-100.285876, 25.639647]}
-        onCancelNavigation={() => alert('Cancel button pressed')}
+        origin={[-105.140629, 39.760194]}
+        destination={[-105.156544, 39.761801]}
       />
     </SafeAreaView>
   );
