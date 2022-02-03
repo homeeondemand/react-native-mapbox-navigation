@@ -1,8 +1,8 @@
 import MapboxCoreNavigation
-import MapboxDirections
 import MapboxNavigation
+import MapboxDirections
 
-// adapted from https://pspdfkit.com/blog/2017/native-view-controllers-and-react-native/ and https://github.com/mslabenyak/react-native-mapbox-navigation/blob/master/ios/Mapbox/MapboxNavigationView.swift
+// // adapted from https://pspdfkit.com/blog/2017/native-view-controllers-and-react-native/ and https://github.com/mslabenyak/react-native-mapbox-navigation/blob/master/ios/Mapbox/MapboxNavigationView.swift
 extension UIView {
   var parentViewController: UIViewController? {
     var parentResponder: UIResponder? = self
@@ -74,9 +74,10 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
     let originWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: origin[1] as! CLLocationDegrees, longitude: origin[0] as! CLLocationDegrees))
     let destinationWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: destination[1] as! CLLocationDegrees, longitude: destination[0] as! CLLocationDegrees))
 
-    let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint])
-            
-    Directions.shared.calculate(options) { [weak self] (session, result) in
+    // let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint])
+    let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint], profileIdentifier: .automobileAvoidingTraffic)
+
+    Directions.shared.calculate(options) { [weak self] (_, result) in
       guard let strongSelf = self, let parentVC = strongSelf.parentViewController else {
         return
       }
@@ -85,14 +86,14 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         case .failure(let error):
           strongSelf.onError!(["message": error.localizedDescription])
         case .success(let response):
-          guard let route = response.routes?.first else {
+          guard let weakSelf = self else {
             return
           }
           
-          let navigationService = MapboxNavigationService(route: route, routeIndex: 0, routeOptions: options, simulating: strongSelf.shouldSimulateRoute ? .always : .never)
+          let navigationService = MapboxNavigationService(routeResponse: response, routeIndex: 0, routeOptions: options, simulating: strongSelf.shouldSimulateRoute ? .always : .never)
           
           let navigationOptions = NavigationOptions(navigationService: navigationService)
-          let vc = NavigationViewController(for: route, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
+          let vc = NavigationViewController(for: response, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
 
           vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
           StatusView.appearance().isHidden = strongSelf.hideStatusView
@@ -125,7 +126,6 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
     if (!canceled) {
       return;
     }
-    
     onCancelNavigation?(["message": ""]);
   }
   
