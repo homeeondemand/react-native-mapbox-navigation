@@ -305,7 +305,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             // it's best to immediately move the camera to the current user location
             if (!firstLocationUpdateReceived) {
                 firstLocationUpdateReceived = true
-                navigationCamera.requestNavigationCameraToOverview(
+                navigationCamera.requestNavigationCameraToFollowing(
                     stateTransitionOptions = NavigationCameraTransitionOptions.Builder()
                         .maxDuration(0) // instant transition
                         .build()
@@ -707,7 +707,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         binding.tripProgressCard.visibility = View.VISIBLE
 
         // move the camera to overview when new route is available
-        navigationCamera.requestNavigationCameraToOverview()
+        navigationCamera.requestNavigationCameraToFollowing()
     }
 
     private fun clearRouteAndStopNavigation() {
