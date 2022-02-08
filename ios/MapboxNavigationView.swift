@@ -353,14 +353,13 @@ class MapboxNavigationView: UIView {
                                                                             routeOptions: options,
                                                                             navigationOptions: navigationOptions)
                     
-                    if let mapView = strongSelf.navigationViewController!.navigationMapView?.mapView {
-                        let customViewportDataSource = MapboxNavigationViewportDataSource(mapView)
-                        strongSelf.navigationViewController!.navigationMapView?.navigationCamera.viewportDataSource = customViewportDataSource
-            
-                        let customCameraStateTransition = MapboxNavigationCameraStateTransition(mapView)
-                        strongSelf.navigationViewController!.navigationMapView?.navigationCamera.cameraStateTransition = customCameraStateTransition
-                    }
-                
+                    strongSelf.mapView = strongSelf.navigationViewController!.navigationMapView?.mapView
+                    let customViewportDataSource = MapboxNavigationViewportDataSource(strongSelf.mapView)
+                    strongSelf.navigationViewController!.navigationMapView?.navigationCamera.viewportDataSource = customViewportDataSource
+        
+                    let customCameraStateTransition = MapboxNavigationCameraStateTransition(strongSelf.mapView)
+                    strongSelf.navigationViewController!.navigationMapView?.navigationCamera.cameraStateTransition = customCameraStateTransition
+                    
                     if strongSelf.styleURL != "" , let styleUri = URL(string: strongSelf.styleURL as String) {
                         strongSelf.mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!)
                     }
