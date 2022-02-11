@@ -335,6 +335,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             },
             {
                 binding.maneuverView.visibility = View.VISIBLE
+                binding.maneuverView.updatePrimaryManeuverTextAppearance(R.style.PrimaryManeuverTextAppearance)
+                binding.maneuverView.updateSecondaryManeuverTextAppearance(R.style.ManeuverTextAppearance)
+                binding.maneuverView.updateSubManeuverTextAppearance(R.style.ManeuverTextAppearance)
+                binding.maneuverView.updateStepDistanceTextAppearance(R.style.StepDistanceRemainingAppearance)
                 binding.maneuverView.renderManeuvers(maneuvers)
             }
         )
