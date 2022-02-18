@@ -8,17 +8,23 @@ import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.mapbox.geojson.Point
-import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.maps.ResourceOptionsManager
+import com.mapbox.maps.TileStoreUsageMode
 import javax.annotation.Nonnull
 
 class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : SimpleViewManager<MapboxNavigationView>() {
+    private var accessToken: String? = null
+
     init {
         mCallerContext.runOnUiQueueThread {
             try {
                 val app = mCallerContext.packageManager.getApplicationInfo(mCallerContext.packageName, PackageManager.GET_META_DATA)
                 val bundle = app.metaData
                 val accessToken = bundle.getString("MAPBOX_ACCESS_TOKEN")
-                Mapbox.getInstance(mCallerContext, accessToken)
+                this.accessToken = accessToken
+                ResourceOptionsManager.getDefault(mCallerContext, accessToken).update {
+                    tileStoreUsageMode(TileStoreUsageMode.READ_ONLY)
+                }
             } catch (e: PackageManager.NameNotFoundException) {
                 e.printStackTrace()
             }
@@ -30,7 +36,7 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     }
 
     public override fun createViewInstance(@Nonnull reactContext: ThemedReactContext): MapboxNavigationView {
-        return MapboxNavigationView(reactContext)
+        return MapboxNavigationView(reactContext, this.accessToken)
     }
 
     override fun onDropViewInstance(view: MapboxNavigationView) {
@@ -78,10 +84,6 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
 
     @ReactProp(name = "mute")
     fun setMute(view: MapboxNavigationView, mute: Boolean) {
-        val isMuted = view.isVoiceGuidanceMuted()
-        if (mute != isMuted) {
-            view.toggleMute()
-        }
         view.setMute(mute)
     }
 }

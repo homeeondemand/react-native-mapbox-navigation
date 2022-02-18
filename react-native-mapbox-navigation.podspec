@@ -2,7 +2,8 @@ require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
-TargetsToChangeToDynamic = ['MapboxMobileEvents']
+# TargetsToChangeToDynamic = ['MapboxMobileEvents']
+TargetsToChangeToDynamic = []
 
 $RNMBNAV = Object.new
 
@@ -38,13 +39,13 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/homeeondemand/react-native-mapbox-navigation"
   s.license    = { :type => "MIT", :file => "LICENSE" }
   s.authors      = { "HOMEE" => "support@homee.com" }
-  s.platforms    = { :ios => "10.0" }
+  s.platforms    = { :ios => "11.0" }
   s.source       = { :git => "https://github.com/homeeondemand/react-native-mapbox-navigation.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,swift}"
   s.requires_arc = true
 
   s.dependency "React-Core"
-  s.dependency "MapboxNavigation", "~> 1.3.0"
+  s.dependency "MapboxNavigation", "~> 2.1.0"
 end
 
