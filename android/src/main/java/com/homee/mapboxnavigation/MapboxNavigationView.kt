@@ -210,6 +210,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         .withLineColor(color ?: "#00AA8D")
                         .withLineWidth(5.0)
                         .withLineOpacity(opacity)
+
+                    polylineAnnotationManager?.deleteAll()
                     polylineAnnotation =
                         polylineAnnotationManager!!.create(polylineAnnotationOptions)
                 }
@@ -241,7 +243,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                             pointAnnotationOptions.withIconImage(icon.getBitmap())
                         }
 
-                        pointAnnotationManager = mapView!!.annotations.createPointAnnotationManager(mapView!!)
+                        pointAnnotationManager?.deleteAll()
                         pointAnnotation = pointAnnotationManager?.create(pointAnnotationOptions)
                     }
                 }
