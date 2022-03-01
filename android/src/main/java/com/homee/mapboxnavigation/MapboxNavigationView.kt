@@ -9,7 +9,6 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
 import android.widget.LinearLayout
@@ -34,8 +33,6 @@ import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
 import com.mapbox.navigation.ui.utils.internal.extensions.getBitmap
-import java.io.ByteArrayOutputStream
-import java.lang.RuntimeException
 import java.net.URL
 
 
@@ -64,14 +61,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var smallRender = false
 
     var mapboxMap: MapboxMap? = null
-    private var mapView: MapView? = null
+    var mapView: MapView? = null
     private var mapboxNavigation: MapboxNavigationNavigation? = null
 
     private var isNavigation = false
     private var followUser = false
     private var polylineAnnotationManager: PolylineAnnotationManager? = null
-    private var polylineAnnotation: PolylineAnnotation? = null
-    private var pointAnnotation: PointAnnotation? = null
     private var pointAnnotationManager: PointAnnotationManager? = null
 
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener { point ->
@@ -182,8 +177,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     private fun addPolylines() {
         if (mapView != null) {
-            deletePolylines()
+            polylineAnnotationManager?.deleteAll()
             if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
+                val polylineOptionList = mutableListOf<PolylineAnnotationOptions>()
+
                 for (i in 0 until polylines!!.size()) {
                     val coordinates = mutableListOf<Point>()
                     val polylineInfo = polylines!!.getMap(i)!!
@@ -211,10 +208,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         .withLineWidth(5.0)
                         .withLineOpacity(opacity)
 
-                    polylineAnnotationManager?.deleteAll()
-                    polylineAnnotation =
-                        polylineAnnotationManager!!.create(polylineAnnotationOptions)
+                    polylineOptionList.add(polylineAnnotationOptions)
                 }
+                polylineAnnotationManager?.create(options = polylineOptionList)
             }
         }
     }
@@ -223,6 +219,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         if (mapView != null) {
             if (markers != null && markers!!.size() > 0) {
                 DoAsync {
+                    pointAnnotationManager?.deleteAll()
+                    val markerOptionList = mutableListOf<PointAnnotationOptions>()
+
                     for (i in 0 until markers!!.size()) {
                         val marker = markers!!.getMap(i)!!
 
@@ -242,16 +241,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         if (icon !== null) {
                             pointAnnotationOptions.withIconImage(icon.getBitmap())
                         }
-
-                        pointAnnotationManager?.deleteAll()
-                        pointAnnotation = pointAnnotationManager?.create(pointAnnotationOptions)
+                        markerOptionList.add(pointAnnotationOptions)
                     }
+                    pointAnnotationManager?.create(options = markerOptionList)
                 }
             } else {
-                if (pointAnnotation != null) {
-                    pointAnnotationManager?.deleteAll()
-                    pointAnnotation = null
-                }
+                pointAnnotationManager?.deleteAll()
             }
         }
     }
@@ -291,6 +286,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             }
         }
 
+
         if (points.size > 0) {
             val mapWidth = mapView!!.width
             val mapHeight = mapView!!.height
@@ -298,9 +294,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 points,
                 EdgeInsets(
                     mapHeight * 0.20 + (if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 20 else 0),
-                        mapWidth * 0.1,
-                        mapHeight * 0.20 + (if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 136 else 0),
-                        mapWidth * 0.1,
+                    mapWidth * 0.1,
+                    mapHeight * 0.20 + (if (camera!!.hasKey("offset") && camera!!.getBoolean("offset")) 136 else 0),
+                    mapWidth * 0.1,
                 )
             )
 
@@ -347,28 +343,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         context.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, name, data)
     }
 
-    private fun deletePolylines() {
-        if (polylineAnnotation != null) {
-            polylineAnnotationManager?.deleteAll()
-            polylineAnnotation = null
-        }
-    }
-
-    fun captureScreenshot(callBack: Callback) {
-        if(mapView != null) {
-            mapView!!.snapshot(MapView.OnSnapshotReady { bitmap: Bitmap? ->
-                if(bitmap != null){
-                    val byteArrayOutputStream = ByteArrayOutputStream()
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-                    val byteArray = byteArrayOutputStream.toByteArray()
-                    val b64String = "data:image/png;base64," + Base64.encodeToString(byteArray, Base64.DEFAULT)
-
-                    callBack(b64String)
-                }
-            })
-        }
-    }
-
     fun startNavigation() {
         if (navigationToken != null
             && destination != null
@@ -376,7 +350,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             && origin != null
         ) {
             isNavigation = true
-            deletePolylines()
+            polylineAnnotationManager?.deleteAll()
             setFollowUser(false)
             Handler(Looper.getMainLooper()).post {
                 mapboxNavigation =
@@ -562,13 +536,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             if (showUserLocation) {
                 enabled = true
 
-                if (!isNavigation && annotationLayerDisplayed) {
-                    layerAbove = annotationLayerId
-                }
+//                if (!isNavigation && annotationLayerDisplayed) {
+//                    layerAbove = annotationLayerId
+//                }
 
                 if (userLocatorMap != null) {
                     locationPuck = LocationPuck2D(
-                            topImage = userLocatorMap,
+                        topImage = userLocatorMap,
                     )
                 }
             } else {
