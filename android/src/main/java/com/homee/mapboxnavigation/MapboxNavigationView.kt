@@ -38,7 +38,7 @@ import java.net.URL
 
 @SuppressLint("ViewConstructor")
 class MapboxNavigationView(private val context: ThemedReactContext, private val mCallerContext: ReactApplicationContext): LinearLayout(context.baseContext) {
-    private val annotationLayerId = "mapbox-android-polylineAnnotation-layer-1"
+    private var annotationLayerId: String? = null
     private var annotationLayerDisplayed = false
     private var origin: Point? = null
     private var destination: Point? = null
@@ -137,35 +137,47 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             mapView.location.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
             mapView.location.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
 
-            val annotationApi = mapView.annotations
-
-            polylineAnnotationManager = annotationApi.createPolylineAnnotationManager(mapView)
-            pointAnnotationManager = annotationApi.createPointAnnotationManager(mapView)
+            setPointAnnotationManager()
+            setPolylineAnnotationManager()
         }
 
         updateMap()
     }
 
+    private fun setPolylineAnnotationManager () {
+        mapView.let {
+            polylineAnnotationManager = mapView!!.annotations.createPolylineAnnotationManager(mapView!!)
+        }
+    }
+
+    private fun setPointAnnotationManager () {
+        mapView.let {
+            pointAnnotationManager = mapView!!.annotations.createPointAnnotationManager(mapView!!)
+        }
+    }
+
     private fun updateMap() {
         Handler(Looper.getMainLooper()).post {
+            applyStyle()
+
             if (!this.isNavigation) {
                 fitCameraForAnnotations()
             }
 
-            applyStyle()
-
             addPolylines()
             addMarkers()
+
+            setShowUserLocation(showUserLocation)
         }
     }
 
     private fun applyStyle() {
         if (styleURL != null) {
             mapboxMap?.loadStyleUri(styleURL!!, Style.OnStyleLoaded {
-                Log.i("MapboxNavigation", " Map style loaded")
                 annotationLayerDisplayed = false
                 for( layer in it.styleLayers) {
-                    if(layer.id == annotationLayerId) {
+                    if("mapbox-android-polylineAnnotation" in layer.id) {
+                        annotationLayerId = layer.id
                         annotationLayerDisplayed = true
                     }
                 }
@@ -180,7 +192,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private fun addPolylines() {
         if (mapView != null) {
             polylineAnnotationManager?.deleteAll()
-            if (polylines != null && polylineAnnotationManager != null && polylines!!.size() > 0) {
+            setPolylineAnnotationManager()
+            if (polylines != null && polylines!!.size() > 0) {
                 for (i in 0 until polylines!!.size()) {
                     val coordinates = mutableListOf<Point>()
                     val polylineInfo = polylines!!.getMap(i)!!
@@ -206,6 +219,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                         .withPoints(coordinates)
                         .withLineColor(color ?: "#00AA8D")
                         .withLineWidth(5.0)
+                        .withLineSortKey(0.0)
                         .withLineOpacity(opacity)
 
                     polylineAnnotationManager!!.create(polylineAnnotationOptions)
@@ -216,7 +230,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     private fun addMarkers() {
         if (mapView != null) {
-            if (markers != null && markers!!.size() > 0 && pointAnnotationManager != null) {
+            pointAnnotationManager?.deleteAll()
+            setPointAnnotationManager()
+            if (markers != null && markers!!.size() > 0) {
                 for (i in 0 until markers!!.size()) {
                     val marker = markers!!.getMap(i)!!
 
@@ -229,6 +245,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     val pointAnnotationOptions: PointAnnotationOptions =
                         PointAnnotationOptions()
                             .withPoint(point)
+                            .withSymbolSortKey(1.0)
 
                     if (markersIcons[i] !== null) {
                         pointAnnotationOptions.withIconImage(markersIcons[i].getBitmap())
@@ -236,8 +253,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
                     pointAnnotationManager!!.create(pointAnnotationOptions)
                 }
-            } else {
-                pointAnnotationManager?.deleteAll()
             }
         }
     }
@@ -552,7 +567,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             }
 
             this.markers = markers
-            updateMap()
         }
     }
 
