@@ -159,15 +159,14 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private fun updateMap() {
         Handler(Looper.getMainLooper()).post {
             applyStyle()
-
-            if (!this.isNavigation) {
-                fitCameraForAnnotations()
-            }
-
+            
             addPolylines()
             addMarkers()
 
-            setShowUserLocation(showUserLocation)
+            if (!this.isNavigation) {
+                fitCameraForAnnotations()
+                setShowUserLocation(showUserLocation)
+            }
         }
     }
 
@@ -356,8 +355,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             && origin != null
         ) {
             isNavigation = true
+
             polylineAnnotationManager?.deleteAll()
+            setPolylineAnnotationManager()
+            
             setFollowUser(false)
+
             Handler(Looper.getMainLooper()).post {
                 mapboxNavigation =
                     MapboxNavigationNavigation(context, navigationToken!!, id, mapView!!)
@@ -369,7 +372,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     useImperial,
                     language,
                     voiceEnabled,
-                    userLocatorNavigation,
                 )
             }
         }
@@ -548,7 +550,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
                 if (userLocatorMap != null) {
                     locationPuck = LocationPuck2D(
-                        topImage = userLocatorMap,
+                        topImage = if(isNavigation) userLocatorNavigation else userLocatorMap,
                     )
                 }
             } else {
