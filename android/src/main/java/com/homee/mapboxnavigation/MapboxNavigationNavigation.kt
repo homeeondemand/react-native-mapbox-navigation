@@ -3,6 +3,7 @@ package com.homee.mapboxnavigation
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.location.Location
+import android.util.Log
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.ThemedReactContext
@@ -11,6 +12,8 @@ import com.mapbox.api.directions.v5.DirectionsCriteria
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.bindgen.Expected
+import com.mapbox.core.constants.Constants.PRECISION_6
+import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
@@ -61,6 +64,7 @@ import com.mapbox.navigation.ui.voice.api.MapboxVoiceInstructionsPlayer
 import com.mapbox.navigation.ui.voice.model.SpeechAnnouncement
 import com.mapbox.navigation.ui.voice.model.SpeechError
 import com.mapbox.navigation.ui.voice.model.SpeechValue
+import java.util.*
 
 class MapboxNavigationNavigation(private val context:ThemedReactContext, private val token: String, private val id: Int, private val mapView: MapView) {
     public var followUser: Boolean = false
@@ -276,6 +280,16 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
 
         // update top banner with maneuver instructions
         val maneuvers = Arguments.createArray()
+        val currentRouteCoords = Arguments.createArray()
+        val currentRouteLine = routeLines[0].route.geometry()?.let { LineString.fromPolyline(it, PRECISION_6).coordinates() }
+        if (currentRouteLine != null) {
+            for(coordinates in currentRouteLine) {
+                val coordsArray = Arguments.createArray()
+                coordsArray.pushDouble(coordinates.latitude())
+                coordsArray.pushDouble(coordinates.longitude())
+                currentRouteCoords.pushArray(coordsArray)
+            }
+        }
         for(leg in routeProgress.route.legs()!!) {
             for(step in leg.steps()!!) {
                 val formattedManeuver = Arguments.createMap()
@@ -302,7 +316,7 @@ class MapboxNavigationNavigation(private val context:ThemedReactContext, private
         event.putDouble("distanceRemaining", routeProgress.distanceRemaining.toDouble())
         event.putDouble("eta", ((System.currentTimeMillis() / 1000) + routeProgress.durationRemaining))
         event.putArray("maneuvers", maneuvers)
-        event.putString("route", routeLines[0].route.geometry())
+        event.putArray("route", currentRouteCoords)
         event.putInt("stepIndex", routeProgress.currentLegProgress?.currentStepProgress?.stepIndex ?: 0)
 
         sendEvent("onRouteProgressChange", event)
