@@ -276,22 +276,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             }
         }
 
-        // add markers points
-        if (markers != null && markers!!.size() > 0) {
-            for (i in 0 until markers!!.size()) {
-                val marker = markers!!.getMap(i)!!
-
-                if (!marker.hasKey("latitude") || !marker.hasKey("longitude")) continue
-
-                val markerLatitude = marker.getDouble("latitude")
-                val markerLongitude = marker.getDouble("longitude")
-                val point = Point.fromLngLat(markerLongitude, markerLatitude)
-
-                points.add(point)
-            }
-        }
-
-
         if (points.size > 0) {
             val mapWidth = mapView!!.width
             val mapHeight = mapView!!.height
@@ -569,12 +553,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             }
 
             this.markers = markers
+            updateMap()
         }
     }
 
     fun setPolylines(polylines: ReadableArray?) {
         this.polylines = polylines
-        updateMap()
     }
 
     fun setSmallRender(smallRender: Boolean = false) {
