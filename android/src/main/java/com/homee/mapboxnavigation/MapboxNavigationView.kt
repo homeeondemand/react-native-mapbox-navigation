@@ -19,6 +19,7 @@ import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
 import com.mapbox.maps.*
 import com.mapbox.maps.extension.observable.eventdata.MapLoadingErrorEventData
+import com.mapbox.maps.extension.observable.subscribeStyleDataLoaded
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.*
@@ -129,7 +130,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         mapView?.let { mapView ->
             mapboxMap = mapView.getMapboxMap()
             mapboxMap?.subscribeStyleDataLoaded(Observer {
-                context.getJSModule(RCTEventEmitter::class.java).receiveEvent(this.id, "onStyleLoaded", Arguments.createMap())
+              context.getJSModule(RCTEventEmitter::class.java).receiveEvent(this.id, "onStyleLoaded", Arguments.createMap())
             })
             mapView.logo.marginLeft = 3000.0F
             mapView.compass.enabled = false
