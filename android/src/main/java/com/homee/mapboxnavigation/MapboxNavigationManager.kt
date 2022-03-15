@@ -34,6 +34,7 @@ class MapboxNavigationManager(private var mCallerContext: ReactApplicationContex
             .put("onNavigationStarted", MapBuilder.of("registrationName", "onNavigationStarted"))
             .put("onTap", MapBuilder.of("registrationName", "onTap"))
             .put("onMapMove", MapBuilder.of("registrationName", "onMapMove"))
+            .put("onStyleLoaded", MapBuilder.of("registrationName", "onStyleLoaded"))
             .build()
     }
 

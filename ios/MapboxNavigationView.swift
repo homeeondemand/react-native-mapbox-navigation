@@ -79,6 +79,7 @@ class MapboxNavigationView: UIView {
     @objc var onTap: RCTDirectEventBlock?
     @objc var onMapMove: RCTDirectEventBlock?
     @objc var onReroute: RCTDirectEventBlock?
+    @objc var onStyleLoaded: RCTDirectEventBlock?
     
     var navigating: Bool = false
     
@@ -121,7 +122,9 @@ class MapboxNavigationView: UIView {
         }
         
         if styleURL != "" , let styleUri = URL(string: styleURL as String) {
-            mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!)
+            mapView.mapboxMap.loadStyleURI(StyleURI.init(url: styleUri)!) { result in
+                self.onStyleLoaded?(["message": ""]);
+            }
         }
         
         cameraLocationConsumer = MapboxNavigationCameraLocationConsumer(mapView: mapView)

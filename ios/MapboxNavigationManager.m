@@ -15,6 +15,7 @@ RCT_EXPORT_VIEW_PROPERTY(onArrive, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onTap, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onReroute, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onMapMove, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onStyleLoaded, RCTDirectEventBlock)
 
 RCT_EXPORT_VIEW_PROPERTY(origin, NSArray)
 RCT_EXPORT_VIEW_PROPERTY(camera, NSDictionary)

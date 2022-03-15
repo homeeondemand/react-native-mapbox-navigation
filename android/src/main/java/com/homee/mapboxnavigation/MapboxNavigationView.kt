@@ -128,6 +128,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         mapView?.let { mapView ->
             mapboxMap = mapView.getMapboxMap()
+            mapboxMap?.subscribeStyleDataLoaded(Observer {
+                context.getJSModule(RCTEventEmitter::class.java).receiveEvent(this.id, "onStyleLoaded", Arguments.createMap())
+            })
             mapView.logo.marginLeft = 3000.0F
             mapView.compass.enabled = false
             mapView.attribution.iconColor = Color.TRANSPARENT
