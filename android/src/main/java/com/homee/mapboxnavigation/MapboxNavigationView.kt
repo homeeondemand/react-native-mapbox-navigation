@@ -563,7 +563,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setPolylines(polylines: ReadableArray?) {
         this.polylines = polylines
-        if (this.isNavigation) {
+        if (this.isNavigation || this.destination != null) {
            updateMap()
         }
     }
