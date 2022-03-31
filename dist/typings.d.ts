@@ -2,6 +2,7 @@
  * Provide an array with longitude and latitude [$longitude, $latitude]
  */
 declare type Coordinate = [number, number];
+declare type CustomRoutes = [[number, number]];
 declare type OnLocationChangeEvent = {
     nativeEvent?: {
         latitude: number;
@@ -24,6 +25,7 @@ declare type OnErrorEvent = {
 export interface IMapboxNavigationProps {
     origin: Coordinate;
     destination: Coordinate;
+    customRoutes: CustomRoutes;
     shouldSimulateRoute?: boolean;
     onLocationChange?: (event: OnLocationChangeEvent) => void;
     onRouteProgressChange?: (event: OnRouteProgressChangeEvent) => void;
