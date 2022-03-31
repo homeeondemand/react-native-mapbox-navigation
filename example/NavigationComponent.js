@@ -4,16 +4,16 @@ import {StyleSheet, View} from 'react-native';
 import MapboxNavigation from '@homee/react-native-mapbox-navigation';
 
 const Navigation = props => {
-  const {origin, destination} = props;
+  const {origin, destination, customRoutes} = props;
 
   return (
     <View style={styles.container}>
       <View style={styles.mapContainer}>
         <MapboxNavigation
-          showsEndOfRouteFeedback={true}
-          shouldSimulateRoute={true}
+          shouldSimulateRoute={false}
           origin={origin}
           destination={destination}
+          customRoutes={customRoutes}
           showsEndOfRouteFeedback={false}
           hideStatusView
           onLocationChange={event => {
@@ -23,9 +23,10 @@ const Navigation = props => {
             console.log('onRouteProgressChange', event.nativeEvent);
           }}
           onError={event => {
-            const {message} = event.nativeEvent;
+            const {error} = event.nativeEvent;
             // eslint-disable-next-line no-alert
-            alert(message);
+            console.log({error});
+            alert('lol' + error);
           }}
           onArrive={() => {
             // eslint-disable-next-line no-alert

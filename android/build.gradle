@@ -100,6 +100,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.cardview:cardview:1.0.0'
+    implementation "com.squareup.okhttp3:okhttp:4.9.3"
 }
 
 def configureReactNativePom(def pom) {

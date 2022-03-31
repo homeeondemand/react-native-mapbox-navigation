@@ -25,6 +25,6 @@
         </intent-filter>
       </activity>
       <meta-data android:name="MAPBOX_ACCESS_TOKEN"
-    android:value="pk.eyJ1Ijoiam9yZ2VxdWV2ZWRveCIsImEiOiJja3FiOXltNHowNGdyMnFwM3R4N3ZiMDBnIn0.Hv8IGOAsBT42OfStxBgxag" />
+    android:value="pk.eyJ1IjoidGVoc2VlbiIsImEiOiJja3luNTVrNncwOGUyMnZzMWRza3Nhd2gwIn0.xEIUsuzKzliyP3cGjFpl5Q" />
     </application>
 </manifest>
