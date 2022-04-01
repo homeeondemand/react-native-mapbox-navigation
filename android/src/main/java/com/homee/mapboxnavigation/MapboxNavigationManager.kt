@@ -76,6 +76,7 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     @ReactProp(name = "customRoutes")
     fun setCustomRoutes(view: MapboxNavigationView, sources: ReadableArray?) {
         var sourceArray = sources?.toArrayList();
+        println("sourceArray: ${sourceArray}")
         if (sources == null) {
              view.setCustomRoutes(null)
             return

@@ -679,7 +679,8 @@ class MapboxNavigationView(
     private fun findRoute(origin: Point, destination: Point) = try {
 //        var routePoints: MutableList<Point> = mutableListOf();
         var isCustomeRoutes = this.customRoutes!!.size > 0;
-        println("TESTSTSSTSTSTS: ${isCustomeRoutes}")
+        println("TESTSTSSTSTSTS1: ${isCustomeRoutes}")
+        println("TESTSTSSTSTSTS1: ${this.customRoutes}")
         if (isCustomeRoutes) {
             val castedCustomRoutes = this.customRoutes as? List<List<Double>> ?: null
             val separator = ";"
