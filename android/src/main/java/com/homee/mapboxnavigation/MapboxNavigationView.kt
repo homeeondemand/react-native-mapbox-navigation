@@ -100,6 +100,7 @@ class MapboxNavigationView(
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
     private var customRoutes: ArrayList<Any>? = arrayListOf()
+    private var wayPointNames: String? = null
 
     /**
      * Debug tool used to play, pause and seek route progress events that can be used to produce mocked location updates along the route.
@@ -679,71 +680,80 @@ class MapboxNavigationView(
     private fun findRoute(origin: Point, destination: Point) = try {
 //        var routePoints: MutableList<Point> = mutableListOf();
         var isCustomeRoutes = this.customRoutes!!.size > 0;
-        println("TESTSTSSTSTSTS1: ${isCustomeRoutes}")
-        println("TESTSTSSTSTSTS1: ${this.customRoutes}")
         if (isCustomeRoutes) {
             val castedCustomRoutes = this.customRoutes as? List<List<Double>> ?: null
             val separator = ";"
 
             val sb = StringBuilder()
-            var finalString: String = ""
-            for (point in castedCustomRoutes!!) {
+            var coordinatesString: String = ""
+            var startingPoint: Point? = null
+            for (pointIndex in castedCustomRoutes!!.indices) {
 
-                sb.append("${point[0]},${point[1]}").append(separator)
-                finalString = sb.removeSuffix(separator).toString()
+                sb.append("${castedCustomRoutes[pointIndex][0]},${castedCustomRoutes[pointIndex][1]}")
+                    .append(separator)
+                coordinatesString = sb.removeSuffix(separator).toString()
 //                routePoints.add(Point.fromLngLat(point[0], point[1]))
+                if (pointIndex === 0) {
+                    startingPoint = Point.fromLngLat(castedCustomRoutes[pointIndex][0], castedCustomRoutes[pointIndex][1])
+                }
             }
-            val url = "https://api.mapbox.com/matching/v5/mapbox/driving/${finalString}?steps=true&geometries=polyline6&tidy=true&annotations=distance,duration,speed&overview=full&banner_instructions=true&language=en&access_token=${accessToken}"
-            println("uRLSSSSS: ${url}")
+            val url =
+                "https://api.mapbox.com/matching/v5/mapbox/driving/${coordinatesString}?steps=true&geometries=polyline6&tidy=true&annotations=distance,duration,speed&overview=full&banner_instructions=true&waypoint_names=${this.wayPointNames}&language=en&access_token=${accessToken}"
+            println("waypoint_names: ${this.wayPointNames} ${url}")
             val mapMatchingRequest = Request.Builder()
                 .url(url)
                 .build()
             httpClient.newCall(mapMatchingRequest).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     println("Eroooorrrrr: ${e.message}")
+                    sendErrorToReact("Error finding route ${e.message}")
                 }
 
                 override fun onResponse(call: Call, response: Response) {
-                        var matchingResponse = MapMatchingResponse.fromJson(response.body?.string());
-                        matchingResponse.matchings()?.let { matchingList ->
-                            matchingList[0].toDirectionRoute().apply {
-                                val matchingListRoutes = listOf(this)
+                    var matchingResponse = MapMatchingResponse.fromJson(response.body?.string());
+                    matchingResponse.matchings()?.let { matchingList ->
+                        matchingList[0].toDirectionRoute().apply {
+                            val matchingListRoutes = listOf(this)
 
-                                mapboxNavigation.requestRoutes(
-                                    RouteOptions.builder()
-                                        .applyDefaultNavigationOptions()
-                                        .applyLanguageAndVoiceUnitOptions(context)
-                                        .coordinatesList(listOf(origin, destination))
-                                        .profile(DirectionsCriteria.PROFILE_DRIVING)
-                                        .steps(true)
-                                        .build(),
-                                    object : RouterCallback {
-                                        override fun onRoutesReady(
-                                            routes: List<DirectionsRoute>,
-                                            routerOrigin: RouterOrigin
-                                        ) {
-                                            println("original routes: ${routes}")
-                                            // println("matching routes: ${matchingListRoutes}")
-                                            setRouteAndStartNavigation(matchingListRoutes)
-                                        }
-
-                                        override fun onFailure(
-                                            reasons: List<RouterFailure>,
-                                            routeOptions: RouteOptions
-                                        ) {
-                                            sendErrorToReact("Error finding route $reasons")
-                                        }
-
-                                        override fun onCanceled(routeOptions: RouteOptions, routerOrigin: RouterOrigin) {
-                                            // no impl
-                                        }
+                            mapboxNavigation.requestRoutes(
+                                RouteOptions.builder()
+                                    .applyDefaultNavigationOptions()
+                                    .applyLanguageAndVoiceUnitOptions(context)
+                                    .coordinatesList(listOf(origin, startingPoint))
+                                    .profile(DirectionsCriteria.PROFILE_DRIVING)
+                                    .steps(true)
+                                    .build(),
+                                object : RouterCallback {
+                                    override fun onRoutesReady(
+                                        routes: List<DirectionsRoute>,
+                                        routerOrigin: RouterOrigin
+                                    ) {
+                                        println("original routes: ${routes}")
+                                         println("matching routes: ${matchingListRoutes}")
+                                        println("merged routes: ${routes + matchingListRoutes}")
+                                        setRouteAndStartNavigation(routes + matchingListRoutes)
                                     }
-                                )
-                            }
+
+                                    override fun onFailure(
+                                        reasons: List<RouterFailure>,
+                                        routeOptions: RouteOptions
+                                    ) {
+                                        sendErrorToReact("Error finding route $reasons")
+                                    }
+
+                                    override fun onCanceled(
+                                        routeOptions: RouteOptions,
+                                        routerOrigin: RouterOrigin
+                                    ) {
+                                        // no impl
+                                    }
+                                }
+                            )
                         }
+                    }
                 }
             })
-            
+
         } else {
             mapboxNavigation.requestRoutes(
                 RouteOptions.builder()
@@ -768,7 +778,10 @@ class MapboxNavigationView(
                         sendErrorToReact("Error finding route $reasons")
                     }
 
-                    override fun onCanceled(routeOptions: RouteOptions, routerOrigin: RouterOrigin) {
+                    override fun onCanceled(
+                        routeOptions: RouteOptions,
+                        routerOrigin: RouterOrigin
+                    ) {
                         // no impl
                     }
                 }
@@ -847,12 +860,16 @@ class MapboxNavigationView(
         this.destination = destination
     }
 
-     fun setCustomRoutes(customRoutes: ArrayList<Any>?) {
-          this.customRoutes = customRoutes
-     }
+    fun setCustomRoutes(customRoutes: ArrayList<Any>?) {
+        this.customRoutes = customRoutes
+    }
 
     fun setShouldSimulateRoute(shouldSimulateRoute: Boolean) {
         this.shouldSimulateRoute = shouldSimulateRoute
+    }
+
+    fun setWayPointNames(wayPointNames: String) {
+        this.wayPointNames = wayPointNames
     }
 
     fun setShowsEndOfRouteFeedback(showsEndOfRouteFeedback: Boolean) {
@@ -863,39 +880,3 @@ class MapboxNavigationView(
         this.isVoiceInstructionsMuted = mute
     }
 }
-
-
-// mapboxNavigation.requestRoutes(
-//                                     MapboxMapMatching.builder()
-//                                         .accessToken(accessToken)
-//                                         .coordinates(routePoints)
-//                                         .steps(true)
-//                                         .voiceInstructions(true)
-//                                         .bannerInstructions(true)
-//                                         .profile(DirectionsCriteria.PROFILE_DRIVING)
-//                                         .build(),
-//                                     object : Callback<MapMatchingResponse> {
-//                                         override fun onResponse(
-//                                             call: Call<MapMatchingResponse>, 
-//                                             response: Response<MapMatchingResponse>
-//                                             ) {
-//                                             // println("original routes: ${routes}")
-//                                             // println("matching routes: ${matchingListRoutes}")
-//                                             // setRouteAndStartNavigation(matchingListRoutes)
-//                                             if (response.isSuccessful) {
-//                                                 response.body()?.matchings()?.let { matchingList ->
-//                                                     matchingList[0].toDirectionRoute().apply {
-//                                                         setRouteAndStartNavigation(listOf(this))
-//                                                     }
-//                                                 }
-                                    
-//                                             }
-//                                         }
-
-//                                         override fun onFailure(
-//                                             call: Call<MapMatchingResponse>, throwable: Throwable
-//                                         ) {
-//                                             sendErrorToReact("Error finding route $throwable")
-//                                         }
-//                                     }
-//                                 )

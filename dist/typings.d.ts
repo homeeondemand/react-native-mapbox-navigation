@@ -3,6 +3,7 @@
  */
 declare type Coordinate = [number, number];
 declare type CustomRoutes = [[number, number]];
+declare type WayPointNames = String;
 declare type OnLocationChangeEvent = {
     nativeEvent?: {
         latitude: number;
@@ -27,6 +28,7 @@ export interface IMapboxNavigationProps {
     destination: Coordinate;
     customRoutes: CustomRoutes;
     shouldSimulateRoute?: boolean;
+    wayPointNames?: WayPointNames;
     onLocationChange?: (event: OnLocationChangeEvent) => void;
     onRouteProgressChange?: (event: OnRouteProgressChangeEvent) => void;
     onError?: (event: OnErrorEvent) => void;

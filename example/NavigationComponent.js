@@ -4,7 +4,7 @@ import {StyleSheet, View} from 'react-native';
 import MapboxNavigation from '@homee/react-native-mapbox-navigation';
 
 const Navigation = props => {
-  const {origin, destination, customRoutes} = props;
+  const {origin, destination, customRoutes, wayPointNames} = props;
 
   return (
     <View style={styles.container}>
@@ -16,6 +16,7 @@ const Navigation = props => {
           customRoutes={customRoutes}
           showsEndOfRouteFeedback={false}
           hideStatusView
+          wayPointNames={wayPointNames}
           onLocationChange={event => {
             console.log('onLocationChange', event.nativeEvent);
           }}
