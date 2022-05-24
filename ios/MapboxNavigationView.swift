@@ -33,6 +33,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   @objc var showsEndOfRouteFeedback: Bool = false
   @objc var hideStatusView: Bool = false
   @objc var mute: Bool = false
+  @objc var showsReportFeedback: Bool = false
   
   @objc var onLocationChange: RCTDirectEventBlock?
   @objc var onRouteProgressChange: RCTDirectEventBlock?
@@ -96,6 +97,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           let vc = NavigationViewController(for: response, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
 
           vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
+          vc.showsReportFeedback = strongSelf.showsReportFeedback
           StatusView.appearance().isHidden = strongSelf.hideStatusView
 
           NavigationSettings.shared.voiceMuted = strongSelf.mute;
