@@ -86,4 +86,9 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     fun setMute(view: MapboxNavigationView, mute: Boolean) {
         view.setMute(mute)
     }
+    
+    @ReactProp(name = "showsReportFeedback")
+    fun setShowsReportFeedback(view: MapboxNavigationView, showsReportFeedback: Boolean) {
+        view.setShowsReportFeedback(showsReportFeedback)
+    }
 }

@@ -89,6 +89,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var origin: Point? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
+    private var showsReportFeedback = false
     private var showsEndOfRouteFeedback = false
     /**
      * Debug tool used to play, pause and seek route progress events that can be used to produce mocked location updates along the route.
@@ -763,5 +764,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setMute(mute: Boolean) {
         this.isVoiceInstructionsMuted = mute
+    }
+    fun setShowsReportFeedback(showsReportFeedback: Boolean) {
+        this.showsReportFeedback = showsReportFeedback
     }
 }
