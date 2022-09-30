@@ -18,7 +18,10 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     init {
         mCallerContext.runOnUiQueueThread {
             try {
-                val app = mCallerContext.packageManager.getApplicationInfo(mCallerContext.packageName, PackageManager.GET_META_DATA)
+                val app = mCallerContext.packageManager.getApplicationInfo(
+                    mCallerContext.packageName,
+                    PackageManager.GET_META_DATA
+                )
                 val bundle = app.metaData
                 val accessToken = bundle.getString("MAPBOX_ACCESS_TOKEN")
                 this.accessToken = accessToken
@@ -46,11 +49,11 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
 
     override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Map<String, String>>? {
         return MapBuilder.of<String, Map<String, String>>(
-                "onLocationChange", MapBuilder.of("registrationName", "onLocationChange"),
-                "onError", MapBuilder.of("registrationName", "onError"),
-                "onCancelNavigation", MapBuilder.of("registrationName", "onCancelNavigation"),
-                "onArrive", MapBuilder.of("registrationName", "onArrive"),
-                "onRouteProgressChange", MapBuilder.of("registrationName", "onRouteProgressChange"),
+            "onLocationChange", MapBuilder.of("registrationName", "onLocationChange"),
+            "onError", MapBuilder.of("registrationName", "onError"),
+            "onCancelNavigation", MapBuilder.of("registrationName", "onCancelNavigation"),
+            "onArrive", MapBuilder.of("registrationName", "onArrive"),
+            "onRouteProgressChange", MapBuilder.of("registrationName", "onRouteProgressChange"),
         )
     }
 
@@ -61,6 +64,22 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
             return
         }
         view.setOrigin(Point.fromLngLat(sources.getDouble(0), sources.getDouble(1)))
+    }
+
+    @ReactProp(name = "waypoints")
+    fun setWaypoints(view: MapboxNavigationView, sources: ReadableArray?) {
+        if (sources == null) {
+            view.setWaypoints(emptyList())
+            return
+        }
+        var coordinateList: MutableList<Point> = ArrayList()
+        for (i in 1 until sources.size()) {
+            if (i % 2 == 0) {
+                var p = Point.fromLngLat(sources.getArray(i).getDouble(0), sources.getArray(i).getDouble(1))
+                coordinateList.add(p)
+            }
+        }
+        view.setWaypoints(coordinateList)
     }
 
     @ReactProp(name = "destination")

@@ -88,8 +88,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     private var origin: Point? = null
     private var destination: Point? = null
+    private var waypoints: List<Point>? = null
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
+
     /**
      * Debug tool used to play, pause and seek route progress events that can be used to produce mocked location updates along the route.
      */
@@ -432,8 +434,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private val measureAndLayout = Runnable {
-        measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY))
+        measure(
+            MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+        )
         layout(left, top, right, bottom)
     }
 
@@ -650,12 +654,19 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private fun findRoute(origin: Point, destination: Point) {
+        var Coordinate = mutableListOf<Point?>()
+        Coordinate.add(origin)
+        if (this.waypoints != null) {
+            Coordinate.addAll(this.waypoints)
+        }
+        Coordinate.add(destination)
+
         try {
             mapboxNavigation.requestRoutes(
                 RouteOptions.builder()
                     .applyDefaultNavigationOptions()
                     .applyLanguageAndVoiceUnitOptions(context)
-                    .coordinatesList(listOf(origin, destination))
+                    .coordinatesList(Coordinate)
                     .profile(DirectionsCriteria.PROFILE_DRIVING)
                     .steps(true)
                     .build(),
@@ -747,6 +758,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setOrigin(origin: Point?) {
         this.origin = origin
+    }
+
+    fun setWaypoints(waypoints: List<Point>?) {
+        this.waypoints = waypoints
     }
 
     fun setDestination(destination: Point?) {
