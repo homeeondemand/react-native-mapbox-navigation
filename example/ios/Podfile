@@ -4,10 +4,13 @@ require_relative '../node_modules/@react-native-community/cli-platform-ios/nativ
 platform :ios, '12.0'
 install! 'cocoapods', :disable_input_output_paths => true
 
+
+
 target 'BasicApp' do
+  $RNMapboxMapsImpl = 'mapbox'
+    
   config = use_native_modules!
   pod 'react-native-mapbox-navigation', :path => '../../', :inhibit_warnings => false
-  $ReactNativeMapboxGLIOSVersion = '~> 8.5.0'
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -16,6 +19,7 @@ target 'BasicApp' do
   )
 
   pre_install do |installer|
+    $RNMapboxMaps.pre_install(installer)
     $RNMBNAV.pre_install(installer)
   end
 
@@ -40,5 +44,6 @@ target 'BasicApp' do
     end
     # $RNMBNAV.post_install(installer)
     $RNMBNAV.pre_install(installer)
+    $RNMapboxMaps.post_install(installer)
   end
 end

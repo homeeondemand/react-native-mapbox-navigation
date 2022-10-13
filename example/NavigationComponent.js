@@ -1,7 +1,6 @@
-/* eslint-disable comma-dangle */
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
-import MapboxNavigation from '@homee/react-native-mapbox-navigation';
+import MapboxNavigation from '@comediadesign/react-native-mapbox-navigation';
 
 const Navigation = props => {
   const {origin, destination} = props;
