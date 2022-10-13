@@ -1,5 +1,5 @@
 {
-  "name": "@homee/react-native-mapbox-navigation",
+  "name": "@comediadesign/react-native-mapbox-navigation",
   "title": "React Native Mapbox Navigation",
   "version": "2.0.0",
   "description": "Smart Mapbox turn-by-turn routing based on real-time traffic for React Native.",
@@ -12,8 +12,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/homeeondemand/react-native-mapbox-navigation.git",
-    "baseUrl": "https://github.com/homeeondemand/react-native-mapbox-navigation.git"
+    "url": "git+https://github.com/comediadesign/react-native-mapbox-navigation.git",
+    "baseUrl": "https://github.com/comediadesign/react-native-mapbox-navigation.git"
   },
   "keywords": [
     "react-native",
@@ -24,16 +24,16 @@
   "licenseFilename": "LICENSE",
   "readmeFilename": "README.md",
   "bugs": {
-    "url": "https://github.com/homeeondemand/react-native-mapbox-navigation/issues"
+    "url": "https://github.com/comediadesign/react-native-mapbox-navigation/issues"
   },
-  "homepage": "https://github.com/homeeondemand/react-native-mapbox-navigation#readme",
+  "homepage": "https://github.com/comediadesign/react-native-mapbox-navigation#readme",
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
   },
   "devDependencies": {
-    "react": "17.0.2",
-    "react-native": "0.66.4",
+    "react": "18.0.0",
+    "react-native": "0.69.1",
     "typescript": "4.3.5"
   }
 }
