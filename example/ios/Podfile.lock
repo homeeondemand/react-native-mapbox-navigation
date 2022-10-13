@@ -11,32 +11,32 @@ PODS:
     - ReactCommon/turbomodule/core (= 0.66.4)
   - fmt (6.2.1)
   - glog (0.3.5)
-  - MapboxCommon (20.1.2)
-  - MapboxCoreMaps (10.1.1):
-    - MapboxCommon (~> 20.1)
-  - MapboxCoreNavigation (2.1.1):
-    - MapboxDirections (~> 2.1)
+  - MapboxCommon (23.0.0)
+  - MapboxCoreMaps (10.8.0):
+    - MapboxCommon (~> 23.0)
+  - MapboxCoreNavigation (2.8.1):
+    - MapboxDirections (~> 2.7)
     - MapboxMobileEvents (~> 1.0)
-    - MapboxNavigationNative (~> 80.0)
-  - MapboxDirections (2.2.0):
+    - MapboxNavigationNative (~> 115.0)
+  - MapboxDirections (2.7.0):
     - Polyline (~> 5.0)
+    - Turf (~> 2.4)
+  - MapboxMaps (10.8.1):
+    - MapboxCommon (= 23.0.0)
+    - MapboxCoreMaps (= 10.8.0)
+    - MapboxMobileEvents (= 1.0.8)
     - Turf (~> 2.0)
-  - MapboxMaps (10.1.2):
-    - MapboxCommon (= 20.1.2)
-    - MapboxCoreMaps (= 10.1.1)
-    - MapboxMobileEvents (= 1.0.6)
-    - Turf (~> 2.0)
-  - MapboxMobileEvents (1.0.6)
-  - MapboxNavigation (2.1.1):
-    - MapboxCoreNavigation (= 2.1.1)
-    - MapboxMaps (< 11.0.0, >= 10.1.1)
+  - MapboxMobileEvents (1.0.8)
+  - MapboxNavigation (2.8.1):
+    - MapboxCoreNavigation (= 2.8.1)
+    - MapboxMaps (~> 10.8)
     - MapboxMobileEvents (~> 1.0)
     - MapboxSpeech (~> 2.0)
     - Solar-dev (~> 3.0)
-  - MapboxNavigationNative (80.0.2):
-    - MapboxCommon (~> 20.1)
-  - MapboxSpeech (2.0.0)
-  - Polyline (5.0.2)
+  - MapboxNavigationNative (115.0.1):
+    - MapboxCommon (~> 23.0)
+  - MapboxSpeech (2.1.0)
+  - Polyline (5.1.0)
   - RCT-Folly (2021.06.28.00-v2):
     - boost
     - DoubleConversion
@@ -235,8 +235,8 @@ PODS:
   - React-jsinspector (0.66.4)
   - React-logger (0.66.4):
     - glog
-  - react-native-mapbox-navigation (1.1.0):
-    - MapboxNavigation (~> 2.1.0)
+  - react-native-mapbox-navigation (2.0.0):
+    - MapboxNavigation (~> 2.8.0)
     - React-Core
   - React-perflogger (0.66.4)
   - React-RCTActionSheet (0.66.4):
@@ -304,7 +304,7 @@ PODS:
     - React-logger (= 0.66.4)
     - React-perflogger (= 0.66.4)
   - Solar-dev (3.0.1)
-  - Turf (2.2.0)
+  - Turf (2.5.0)
   - Yoga (1.14.0)
 
 DEPENDENCIES:
@@ -429,16 +429,16 @@ SPEC CHECKSUMS:
   FBReactNativeSpec: fe08c1cd7e2e205718d77ad14b34957cce949b58
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 5337263514dd6f09803962437687240c5dc39aa4
-  MapboxCommon: f15bb4cc4810d8d72e2d72bf2295f3f0cb328b11
-  MapboxCoreMaps: ee3d7f31efbbafe81ce33907b6a96066e111a244
-  MapboxCoreNavigation: 90cfee78d9a7aeada16468e6ad9cbf425c41acc3
-  MapboxDirections: aaa6f1ae1612692ef3b4211d20d22404ad8ef607
-  MapboxMaps: e4c4620a76b9e26a5d6cae10ffee5681a135b3de
-  MapboxMobileEvents: 14d7ac3ee95b4142c4fec2205dfd48ff453e8871
-  MapboxNavigation: ae52148971b92fd0b5735b15db7f5b1feb13906f
-  MapboxNavigationNative: 5319134183246da72d3ad7f4d4089452ce450167
-  MapboxSpeech: e4ed02984444b6373374c72c369edaf045cc490c
-  Polyline: fce41d72e1146c41c6d081f7656827226f643dff
+  MapboxCommon: 3c82587e77a92aa34a6166b164dadb856be6975f
+  MapboxCoreMaps: 1f45781e96f509d7f0d2134153725003ca84820c
+  MapboxCoreNavigation: 3087b09be252dbbc57f77bdb118e7cb314d1f4ed
+  MapboxDirections: 04405deb646d6549c6a891447d990c28a7dd910b
+  MapboxMaps: 44e631a7725518487442933bb56e7c4e736b9f95
+  MapboxMobileEvents: febdd92835daa258ca1c1faad0821c0b3394ef40
+  MapboxNavigation: ee2b7dc5bdac17a26d0294843c535883ec2d8029
+  MapboxNavigationNative: ce363763f1cd67857e0713d37a992466145e4bd8
+  MapboxSpeech: a3789121e8d91eb9bc9af6ddd60768729a918f71
+  Polyline: 2a1f29f87f8d9b7de868940f4f76deb8c678a5b1
   RCT-Folly: a21c126816d8025b547704b777a2ba552f3d9fa9
   RCTRequired: 4bf86c70714490bca4bf2696148638284622644b
   RCTTypeSafety: c475a7059eb77935fa53d2c17db299893f057d5d
@@ -451,7 +451,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 94ce921e1d8ce7023366873ec371f3441383b396
   React-jsinspector: d0374f7509d407d2264168b6d0fad0b54e300b85
   React-logger: 933f80c97c633ee8965d609876848148e3fef438
-  react-native-mapbox-navigation: 0966e03abd15664a2255a40f315c91e109a8a054
+  react-native-mapbox-navigation: 12e4ec7c3cded6213d927db07a67b0ef4e874c52
   React-perflogger: 93075d8931c32cd1fce8a98c15d2d5ccc4d891bd
   React-RCTActionSheet: 7d3041e6761b4f3044a37079ddcb156575fb6d89
   React-RCTAnimation: 743e88b55ac62511ae5c2e22803d4f503f2a3a13
@@ -465,9 +465,9 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: dec32ee6f2e2a26e13e58152271535fadff5455a
   ReactCommon: 57b69f6383eafcbd7da625bfa6003810332313c4
   Solar-dev: 4612dc9878b9fed2667d23b327f1d4e54e16e8d0
-  Turf: 1a6bc2d0142f84610445159565c3c93d62b83897
+  Turf: 8adf034c2963a0e587b979c51b5c12c396e29c44
   Yoga: e7dc4e71caba6472ff48ad7d234389b91dadc280
 
-PODFILE CHECKSUM: b825e0c0c2130ea0c4924baa443a786ab3686731
+PODFILE CHECKSUM: 00ec0d39b75a575e7132dac236b166ccd0dde609
 
-COCOAPODS: 1.11.2
+COCOAPODS: 1.11.3
