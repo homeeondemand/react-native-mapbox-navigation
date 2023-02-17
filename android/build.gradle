@@ -12,10 +12,10 @@
 
 // https://www.cognizantsoftvision.com/blog/creating-an-android-native-module-for-react-native/
 
-def DEFAULT_COMPILE_SDK_VERSION = 30
+def DEFAULT_COMPILE_SDK_VERSION = 31
 def DEFAULT_BUILD_TOOLS_VERSION = '30.0.2'
 def DEFAULT_MIN_SDK_VERSION = 21
-def DEFAULT_TARGET_SDK_VERSION = 30
+def DEFAULT_TARGET_SDK_VERSION = 31
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -96,7 +96,7 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
-    implementation "com.mapbox.navigation:android:2.0.0"
+    implementation "com.mapbox.navigation:android:2.1.1"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.cardview:cardview:1.0.0'
