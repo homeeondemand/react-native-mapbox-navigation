@@ -28,6 +28,11 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   @objc var destination: NSArray = [] {
     didSet { setNeedsLayout() }
   }
+
+  @objc var waypoints: NSArray = [] {
+  didSet { setNeedsLayout() }
+}
+
   
   @objc var shouldSimulateRoute: Bool = false
   @objc var showsEndOfRouteFeedback: Bool = false
@@ -71,11 +76,24 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
     
     embedding = true
 
-    let originWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: origin[1] as! CLLocationDegrees, longitude: origin[0] as! CLLocationDegrees))
-    let destinationWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: destination[1] as! CLLocationDegrees, longitude: destination[0] as! CLLocationDegrees))
+    var waypointsCoordinates: [CLLocationCoordinate2D] = []
+  
+    let originCoordinate = CLLocationCoordinate2D(latitude: origin[1] as! CLLocationDegrees, longitude: origin[0] as! CLLocationDegrees)
+
+    let destinationCoordinate = CLLocationCoordinate2D(latitude: destination[1] as! CLLocationDegrees, longitude: destination[0] as! CLLocationDegrees)
+
+    waypointsCoordinates.append(originCoordinate)
+  
+ 
+    for waypoint in waypoints {
+        let waypointCoordinate = CLLocationCoordinate2D(latitude: waypoint[1] as! CLLocationDegrees, longitude: waypoint[0] as! CLLocationDegrees)
+        waypointsCoordinates.append(waypointCoordinate)
+      }
+      
+    waypointsCoordinates.append(destinationCoordinate)
 
     // let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint])
-    let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint], profileIdentifier: .automobileAvoidingTraffic)
+    let options = NavigationRouteOptions(waypoints: waypointsCoordinates, profileIdentifier: .automobileAvoidingTraffic)
 
     Directions.shared.calculate(options) { [weak self] (_, result) in
       guard let strongSelf = self, let parentVC = strongSelf.parentViewController else {
