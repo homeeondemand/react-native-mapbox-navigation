@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 // android/build.gradle
 
 // based on:
@@ -22,9 +24,11 @@ def safeExtGet(prop, fallback) {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 
 buildscript {
+    ext.kotlin_version = '1.9.0'
     // The Android Gradle plugin is only required when opening the android folder stand-alone.
     // This avoids unnecessary downloads and potential conflicts when the library is included as a
     // module dependency in an application project.
@@ -32,7 +36,7 @@ buildscript {
     if (project == rootProject) {
         repositories {
             google()
-            jcenter()
+            mavenCentral()
         }
         dependencies {
             classpath 'com.android.tools.build:gradle:8.0.1'
@@ -42,9 +46,14 @@ buildscript {
     repositories {
         mavenCentral()
     }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 
 android {
@@ -64,6 +73,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
     buildFeatures {
         viewBinding true
     }
@@ -81,77 +93,63 @@ repositories {
         url "$rootDir/../node_modules/jsc-android/dist"
     }
     google()
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
     implementation "com.mapbox.navigation:android:2.17.8"
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.cardview:cardview:1.0.0'
 }
 
-// def configureReactNativePom(def pom) {
-//     def packageJson = new groovy.json.JsonSlurper().parseText(file('../package.json').text)
+def packageJson = new JsonSlurper().parseText(file('../package.json').text)
 
-//     pom.project {
-//         name packageJson.title
-//         artifactId packageJson.name
-//         version = packageJson.version
-//         group = "com.homee.mapboxnavigation"
-//         description packageJson.description
-//         url packageJson.repository.baseUrl
+publishing {
+    publications {
+        release(MavenPublication) {
+            from components.findByName('release')
 
-//         licenses {
-//             license {
-//                 name packageJson.license
-//                 url packageJson.repository.baseUrl + '/blob/master/' + packageJson.licenseFilename
-//                 distribution 'repo'
-//             }
-//         }
-//     }
-// }
+            groupId = "com.homee.mapboxnavigation"
+            artifactId = packageJson.name
+            version = packageJson.version
 
-// afterEvaluate { project ->
-//     // some Gradle build hooks ref:
-//     // https://www.oreilly.com/library/view/gradle-beyond-the/9781449373801/ch03.html
-//     task androidJavadoc(type: Javadoc) {
-//         source = android.sourceSets.main.java.srcDirs
-//         classpath += files(android.bootClasspath)
-//         classpath += files(android.sdkDirectory.toString() + '/platforms/android-' + android.compileSdkVersion + '/android.jar')
-//         include '**/*.java'
-//     }
+            pom {
+                name = packageJson.title
+                description = packageJson.description
+                url = packageJson.repository.baseUrl
 
-//     task androidJavadocJar(type: Jar, dependsOn: androidJavadoc) {
-//         from androidJavadoc.destinationDir
-//     }
+                licenses {
+                    license {
+                        name = packageJson.license
+                        url = packageJson.repository.baseUrl + '/blob/master/' + packageJson.licenseFilename
+                        distribution = 'repo'
+                    }
+                }
 
-//     task androidSourcesJar(type: Jar) {
-//         from android.sourceSets.main.java.srcDirs
-//         include '**/*.java'
-//     }
+            }
+        }
+    }
 
-//     android.libraryVariants.all { variant ->
-//         def name = variant.name.capitalize()
-//         def javaCompileTask = variant.javaCompileProvider.get()
+    repositories {
+        maven {
+            url = uri("file://${projectDir}/../android/maven")
+        }
+    }
+}
 
-//         task "jar${name}"(type: Jar, dependsOn: javaCompileTask) {
-//             from javaCompileTask.destinationDir
-//         }
-//     }
+afterEvaluate { project ->
 
-//     artifacts {
-//         archives androidSourcesJar
-//         archives androidJavadocJar
-//     }
+    android.libraryVariants.configureEach { variant ->
+        def name = variant.name.capitalize()
+        def javaCompileTask = variant.javaCompileProvider.get()
 
-//     task installArchives(type: Upload) {
-//         configuration = configurations.archives
-//         repositories.mavenDeployer {
-//             // Deploy to react-native-event-bridge/maven, ready to publish to npm
-//             repository url: "file://${projectDir}/../android/maven"
-//             configureReactNativePom pom
-//         }
-//     }
-// }
+        tasks.register("jar${name}", Jar) {
+            dependsOn javaCompileTask
+            from javaCompileTask.destinationDirectory
+        }
+    }
+
+}
