@@ -1,24 +1,9 @@
 import groovy.json.JsonSlurper
 
-// android/build.gradle
-
-// based on:
-//
-// * https://github.com/facebook/react-native/blob/0.60-stable/template/android/build.gradle
-//   original location:
-//   - https://github.com/facebook/react-native/blob/0.58-stable/local-cli/templates/HelloWorld/android/build.gradle
-//
-// * https://github.com/facebook/react-native/blob/0.60-stable/template/android/app/build.gradle
-//   original location:
-//   - https://github.com/facebook/react-native/blob/0.58-stable/local-cli/templates/HelloWorld/android/app/build.gradle
-
-// https://www.cognizantsoftvision.com/blog/creating-an-android-native-module-for-react-native/
-
 def DEFAULT_COMPILE_SDK_VERSION = 33
-def DEFAULT_BUILD_TOOLS_VERSION = '33.0.0'
-def DEFAULT_MIN_SDK_VERSION = 21
+def DEFAULT_BUILD_TOOLS_VERSION = '31.0.0'
+def DEFAULT_MIN_SDK_VERSION = 24
 def DEFAULT_TARGET_SDK_VERSION = 33
-def DEFAULT_NDK_VERSION = "23.1.7779620"
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -29,7 +14,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 
 buildscript {
-    ext.kotlin_version = '1.9.0'
+    ext.kotlin_version = '1.6.20'
     // The Android Gradle plugin is only required when opening the android folder stand-alone.
     // This avoids unnecessary downloads and potential conflicts when the library is included as a
     // module dependency in an application project.
@@ -37,10 +22,10 @@ buildscript {
     if (project == rootProject) {
         repositories {
             google()
-            mavenCentral()
+            jcenter()
         }
         dependencies {
-            classpath 'com.android.tools.build:gradle:8.0.1'
+            classpath 'com.android.tools.build:gradle:3.4.1'
         }
     }
 
@@ -58,18 +43,8 @@ apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 
 android {
-    packagingOptions {
-        pickFirst 'lib/x86/libc++_shared.so'
-        pickFirst 'lib/x86_64/libc++_shared.so'
-        pickFirst 'lib/arm64-v8a/libc++_shared.so'
-        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
-    }
-
-    namespace 'com.homee.mapboxnavigation'
     compileSdkVersion safeExtGet('compileSdkVersion', DEFAULT_COMPILE_SDK_VERSION)
     buildToolsVersion safeExtGet('buildToolsVersion', DEFAULT_BUILD_TOOLS_VERSION)
-    ndkVersion safeExtGet('ndkVersion', DEFAULT_NDK_VERSION)
-    
     defaultConfig {
         minSdkVersion safeExtGet('minSdkVersion', DEFAULT_MIN_SDK_VERSION)
         targetSdkVersion safeExtGet('targetSdkVersion', DEFAULT_TARGET_SDK_VERSION)
@@ -80,26 +55,11 @@ android {
         abortOnError false
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = "17"
-    }
-    buildFeatures {
-        viewBinding true
-    }
-    packagingOptions {
-        pickFirst '**/armeabi-v7a/libc++_shared.so'
-        pickFirst '**/x86/libc++_shared.so'
-        pickFirst '**/arm64-v8a/libc++_shared.so'
-        pickFirst '**/x86_64/libc++_shared.so'
-        pickFirst '**/x86/libc++_shared.so'
-        pickFirst '**/armeabi-v7a/libmapbox-maps.so'
-        pickFirst '**/x86/libmapbox-maps.so'
-        pickFirst '**/arm64-v8a/libmapbox-maps.so'
-        pickFirst '**/x86_64/libmapbox-maps.so'
-        pickFirst '**/x86/libmapbox-maps.so'
+        jvmTarget = "1.8"
     }
 }
 
@@ -115,63 +75,45 @@ repositories {
         url "$rootDir/../node_modules/jsc-android/dist"
     }
     google()
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
     //noinspection GradleDynamicVersion
-    implementation 'com.facebook.react:react-native:+'  // From node_modules
-    implementation "com.mapbox.navigation:android:2.17.8"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'com.facebook.react:react-native:+' // From node_modules
+    implementation 'com.mapbox.navigation:core:1.5.0'
+    implementation 'com.mapbox.navigation:ui:1.5.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
-def packageJson = new JsonSlurper().parseText(file('../package.json').text)
+def configureReactNativePom(def pom) {
+def packageJson = new groovy.json.JsonSlurper().parseText(file('../package.json').text)
 
-publishing {
-    publications {
-        release(MavenPublication) {
-            from components.findByName('release')
+    pom.project {
+        name packageJson.title
+        artifactId packageJson.name
+        version = packageJson.version
+        group = "com.homee.mapboxnavigation"
+        description packageJson.description
+        url packageJson.repository.baseUrl
 
-            groupId = "com.homee.mapboxnavigation"
-            artifactId = packageJson.name
-            version = packageJson.version
-
-            pom {
-                name = packageJson.title
-                description = packageJson.description
-                url = packageJson.repository.baseUrl
-
-                licenses {
-                    license {
-                        name = packageJson.license
-                        url = packageJson.repository.baseUrl + '/blob/master/' + packageJson.licenseFilename
-                        distribution = 'repo'
-                    }
-                }
-
+        licenses {
+            license {
+                name packageJson.license
+                url packageJson.repository.baseUrl + '/blob/master/' + packageJson.licenseFilename
+                distribution 'repo'
             }
-        }
-    }
-
-    repositories {
-        maven {
-            url = uri("file://${projectDir}/../android/maven")
         }
     }
 }
 
 afterEvaluate { project ->
-
-    android.libraryVariants.configureEach { variant ->
+    android.libraryVariants.all { variant ->
         def name = variant.name.capitalize()
         def javaCompileTask = variant.javaCompileProvider.get()
 
-        tasks.register("jar${name}", Jar) {
-            dependsOn javaCompileTask
-            from javaCompileTask.destinationDirectory
+        task "jar${name}"(type: Jar, dependsOn: javaCompileTask) {
+            from javaCompileTask.destinationDir
         }
     }
-
 }
