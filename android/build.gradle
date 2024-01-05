@@ -70,14 +70,26 @@ android {
         abortOnError false
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         viewBinding true
+    }
+    packagingOptions {
+        pickFirst '**/armeabi-v7a/libc++_shared.so'
+        pickFirst '**/x86/libc++_shared.so'
+        pickFirst '**/arm64-v8a/libc++_shared.so'
+        pickFirst '**/x86_64/libc++_shared.so'
+        pickFirst '**/x86/libc++_shared.so'
+        pickFirst '**/armeabi-v7a/libmapbox-maps.so'
+        pickFirst '**/x86/libmapbox-maps.so'
+        pickFirst '**/arm64-v8a/libmapbox-maps.so'
+        pickFirst '**/x86_64/libmapbox-maps.so'
+        pickFirst '**/x86/libmapbox-maps.so'
     }
 }
 
