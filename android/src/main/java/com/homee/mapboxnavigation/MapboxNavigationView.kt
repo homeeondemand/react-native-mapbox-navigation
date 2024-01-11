@@ -87,6 +87,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private var origin: Point? = null
+    private var waypoints: List<Point>? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
@@ -627,7 +628,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         mapboxNavigation.registerVoiceInstructionsObserver(voiceInstructionsObserver)
         mapboxNavigation.registerRouteProgressObserver(replayProgressObserver)
 
-        this.origin?.let { this.destination?.let { it1 -> this.findRoute(it, it1) } }
+        // Create a list of coordinates that includes origin, destination, and waypoints
+        val coordinatesList = mutableListOf<Point>()
+        this.origin?.let { coordinatesList.add(it) }
+        this.waypoints?.let { coordinatesList.addAll(it) }
+        this.destination?.let { coordinatesList.add(it) }
+
+        findRoute(coordinatesList)
     }
 
     override fun onDetachedFromWindow() {
@@ -649,13 +656,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         voiceInstructionsPlayer.shutdown()
     }
 
-    private fun findRoute(origin: Point, destination: Point) {
+    private fun findRoute(coordinates: List<Point>) {
         try {
             mapboxNavigation.requestRoutes(
                 RouteOptions.builder()
                     .applyDefaultNavigationOptions()
                     .applyLanguageAndVoiceUnitOptions(context)
-                    .coordinatesList(listOf(origin, destination))
+                    .coordinatesList(coordinates)
                     .profile(DirectionsCriteria.PROFILE_DRIVING)
                     .steps(true)
                     .build(),
@@ -747,6 +754,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setOrigin(origin: Point?) {
         this.origin = origin
+    }
+
+    fun setWaypoints(waypoints: List<Point>) {
+        this.waypoints = waypoints
     }
 
     fun setDestination(destination: Point?) {
