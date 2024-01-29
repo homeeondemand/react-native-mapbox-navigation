@@ -37,5 +37,7 @@ export interface IMapboxNavigationProps {
   showsEndOfRouteFeedback?: boolean;
   hideStatusView?: boolean;
   mute?: boolean;
-  waypoints: Coordinate[];
+  waypoints?: Coordinate[];
+  vehicleMaxHeight?: number;
+  vehicleMaxWidth?: number;
 }

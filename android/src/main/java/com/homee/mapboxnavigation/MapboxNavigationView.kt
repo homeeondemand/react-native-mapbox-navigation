@@ -91,6 +91,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var destination: Point? = null
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
+    private var vehicleMaxHeight: Double? = null
+    private var vehicleMaxWidth: Double? = null
     /**
      * Debug tool used to play, pause and seek route progress events that can be used to produce mocked location updates along the route.
      */
@@ -658,14 +660,20 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     private fun findRoute(coordinates: List<Point>) {
         try {
+            val routeOptionsBuilder = RouteOptions.builder()
+            .applyDefaultNavigationOptions()
+            .applyLanguageAndVoiceUnitOptions(context)
+            .coordinatesList(coordinates)
+            .profile(DirectionsCriteria.PROFILE_DRIVING)
+            .steps(true)
+
+            vehicleMaxHeight?.let { routeOptionsBuilder.maxHeight(it) }
+            vehicleMaxWidth?.let { routeOptionsBuilder.maxWidth(it) }
+
+            val routeOptions = routeOptionsBuilder.build()
+
             mapboxNavigation.requestRoutes(
-                RouteOptions.builder()
-                    .applyDefaultNavigationOptions()
-                    .applyLanguageAndVoiceUnitOptions(context)
-                    .coordinatesList(coordinates)
-                    .profile(DirectionsCriteria.PROFILE_DRIVING)
-                    .steps(true)
-                    .build(),
+                routeOptions,
                 object : RouterCallback {
                     override fun onRoutesReady(
                         routes: List<DirectionsRoute>,
@@ -774,5 +782,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setMute(mute: Boolean) {
         this.isVoiceInstructionsMuted = mute
+    }
+
+    fun setMaxHeight(vehicleMaxHeight: Double?) {
+        this.vehicleMaxHeight = vehicleMaxHeight
+    }
+    
+    fun setMaxWidth(vehicleMaxWidth: Double?) {
+        this.vehicleMaxWidth = vehicleMaxWidth
     }
 }

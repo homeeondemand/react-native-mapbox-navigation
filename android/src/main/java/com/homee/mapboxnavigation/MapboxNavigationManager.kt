@@ -100,5 +100,15 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
       }
   }
 
+  @ReactProp(name = "vehicleMaxHeight")
+  fun setMaxHeight(view: MapboxNavigationView, maxHeight: Double?) {
+      view.setMaxHeight(vehicleMaxHeight)
+  }
+
+  @ReactProp(name = "vehicleMaxWidth")
+  fun setMaxWidth(view: MapboxNavigationView, maxWidth: Double?) {
+      view.setMaxWidth(vehicleMaxWidth)
+  }
+
 
 }
