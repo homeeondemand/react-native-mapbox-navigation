@@ -91,8 +91,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var destination: Point? = null
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
-    private var vehicleMaxHeight: Double? = null
-    private var vehicleMaxWidth: Double? = null
+    private var vehicleMaxHeight: Float? = null
+    private var vehicleMaxWidth: Float? = null
     /**
      * Debug tool used to play, pause and seek route progress events that can be used to produce mocked location updates along the route.
      */
@@ -667,8 +667,8 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             .profile(DirectionsCriteria.PROFILE_DRIVING)
             .steps(true)
 
-            vehicleMaxHeight?.let { routeOptionsBuilder.maxHeight(it) }
-            vehicleMaxWidth?.let { routeOptionsBuilder.maxWidth(it) }
+            vehicleMaxHeight?.let { routeOptionsBuilder.maxHeight(it.toDouble()) }
+            vehicleMaxWidth?.let { routeOptionsBuilder.maxWidth(it.toDouble()) }
 
             val routeOptions = routeOptionsBuilder.build()
 
@@ -784,11 +784,11 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         this.isVoiceInstructionsMuted = mute
     }
 
-    fun setMaxHeight(vehicleMaxHeight: Double?) {
+    fun setMaxHeight(vehicleMaxHeight: Float?) {
         this.vehicleMaxHeight = vehicleMaxHeight
     }
     
-    fun setMaxWidth(vehicleMaxWidth: Double?) {
+    fun setMaxWidth(vehicleMaxWidth: Float?) {
         this.vehicleMaxWidth = vehicleMaxWidth
     }
 }
