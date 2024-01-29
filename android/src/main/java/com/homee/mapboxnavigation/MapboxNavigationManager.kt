@@ -89,7 +89,7 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
           val waypoints = mutableListOf<Point>()
           for (i in 0 until it.size()) {
               val waypointArray = it.getArray(i)
-              if (waypointArray && waypointArray.size() >= 2) {
+              if (waypointArray !== null && waypointArray.size() >= 2) {
                   val longitude = waypointArray.getDouble(0)
                   val latitude = waypointArray.getDouble(1)
                   waypoints.add(Point.fromLngLat(longitude, latitude))
