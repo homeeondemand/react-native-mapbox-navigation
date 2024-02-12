@@ -26,15 +26,17 @@
 
         <com.mapbox.navigation.ui.tripprogress.view.MapboxTripProgressView
             android:id="@+id/tripProgressView"
-            android:layout_width="330dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="left" />
+            android:layout_gravity="fill|left"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp" />
 
         <ImageView
             android:id="@+id/stop"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_gravity="end|center_vertical"
+            android:layout_gravity="right|center_vertical"
             android:layout_marginEnd="12dp"
             app:srcCompat="@android:drawable/ic_delete"
             app:tint="@android:color/darker_gray" />
