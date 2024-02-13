@@ -87,9 +87,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private var origin: Point? = null
+    private var waypoints: List<Point>? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
+    private var maxHeight: Double? = null
+    private var maxWidth: Double? = null
     /**
      * Debug tool used to play, pause and seek route progress events that can be used to produce mocked location updates along the route.
      */
@@ -627,7 +630,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         mapboxNavigation.registerVoiceInstructionsObserver(voiceInstructionsObserver)
         mapboxNavigation.registerRouteProgressObserver(replayProgressObserver)
 
-        this.origin?.let { this.destination?.let { it1 -> this.findRoute(it, it1) } }
+        // Create a list of coordinates that includes origin, destination, and waypoints
+        val coordinatesList = mutableListOf<Point>()
+        this.origin?.let { coordinatesList.add(it) }
+        this.waypoints?.let { coordinatesList.addAll(it) }
+        this.destination?.let { coordinatesList.add(it) }
+
+        findRoute(coordinatesList)
     }
 
     override fun onDetachedFromWindow() {
@@ -649,16 +658,22 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         voiceInstructionsPlayer.shutdown()
     }
 
-    private fun findRoute(origin: Point, destination: Point) {
+    private fun findRoute(coordinates: List<Point>) {
         try {
+            val routeOptionsBuilder = RouteOptions.builder()
+            .applyDefaultNavigationOptions()
+            .applyLanguageAndVoiceUnitOptions(context)
+            .coordinatesList(coordinates)
+            .profile(DirectionsCriteria.PROFILE_DRIVING)
+            .steps(true)
+
+            maxHeight?.let { routeOptionsBuilder.maxHeight(it) }
+            maxWidth?.let { routeOptionsBuilder.maxWidth(it) }
+
+            val routeOptions = routeOptionsBuilder.build()
+
             mapboxNavigation.requestRoutes(
-                RouteOptions.builder()
-                    .applyDefaultNavigationOptions()
-                    .applyLanguageAndVoiceUnitOptions(context)
-                    .coordinatesList(listOf(origin, destination))
-                    .profile(DirectionsCriteria.PROFILE_DRIVING)
-                    .steps(true)
-                    .build(),
+                routeOptions,
                 object : RouterCallback {
                     override fun onRoutesReady(
                         routes: List<DirectionsRoute>,
@@ -749,6 +764,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         this.origin = origin
     }
 
+    fun setWaypoints(waypoints: List<Point>) {
+        this.waypoints = waypoints
+    }
+
     fun setDestination(destination: Point?) {
         this.destination = destination
     }
@@ -763,5 +782,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setMute(mute: Boolean) {
         this.isVoiceInstructionsMuted = mute
+    }
+
+    fun setMaxHeight(maxHeight: Double?) {
+        this.maxHeight = maxHeight
+    }
+    
+    fun setMaxWidth(maxWidth: Double?) {
+        this.maxWidth = maxWidth
     }
 }
