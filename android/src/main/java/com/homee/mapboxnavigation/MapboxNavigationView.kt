@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.uimanager.ThemedReactContext
+import com.mapbox.api.directions.v5.models.Bearing
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.bindgen.Expected
@@ -22,18 +23,23 @@ import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.location
+import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
 import com.mapbox.navigation.base.TimeFormat
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
 import com.mapbox.navigation.base.extensions.applyLanguageAndVoiceUnitOptions
+import com.mapbox.navigation.base.formatter.DistanceFormatterOptions
 import com.mapbox.navigation.base.options.NavigationOptions
-import com.mapbox.navigation.base.route.RouterCallback
+import com.mapbox.navigation.base.route.NavigationRoute
+import com.mapbox.navigation.base.route.NavigationRouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
 import com.mapbox.navigation.base.route.RouterOrigin
 import com.mapbox.navigation.core.MapboxNavigation
-import com.mapbox.navigation.core.MapboxNavigationProvider
 import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.core.formatter.MapboxDistanceFormatter
+import com.mapbox.navigation.core.lifecycle.MapboxNavigationApp
+import com.mapbox.navigation.core.lifecycle.MapboxNavigationObserver
 import com.mapbox.navigation.core.replay.MapboxReplayer
 import com.mapbox.navigation.core.replay.ReplayLocationEngine
 import com.mapbox.navigation.core.replay.route.ReplayProgressObserver
@@ -42,42 +48,42 @@ import com.mapbox.navigation.core.trip.session.LocationMatcherResult
 import com.mapbox.navigation.core.trip.session.LocationObserver
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
-import com.homee.mapboxnavigation.databinding.NavigationViewBinding
+import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.api.directions.v5.DirectionsCriteria
-import com.mapbox.navigation.base.trip.model.RouteLegProgress
-import com.mapbox.navigation.base.trip.model.RouteProgress
-import com.mapbox.navigation.core.arrival.ArrivalObserver
-import com.mapbox.navigation.ui.base.util.MapboxNavigationConsumer
-import com.mapbox.navigation.ui.maneuver.api.MapboxManeuverApi
-import com.mapbox.navigation.ui.maneuver.view.MapboxManeuverView
-import com.mapbox.navigation.ui.maps.camera.NavigationCamera
-import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSource
-import com.mapbox.navigation.ui.maps.camera.lifecycle.NavigationBasicGesturesHandler
-import com.mapbox.navigation.ui.maps.camera.state.NavigationCameraState
-import com.mapbox.navigation.ui.maps.camera.transition.NavigationCameraTransitionOptions
-import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
-import com.mapbox.navigation.ui.maps.route.arrow.api.MapboxRouteArrowApi
-import com.mapbox.navigation.ui.maps.route.arrow.api.MapboxRouteArrowView
-import com.mapbox.navigation.ui.maps.route.arrow.model.RouteArrowOptions
-import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
-import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
-import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
-import com.mapbox.navigation.ui.maps.route.line.model.RouteLine
-import com.mapbox.navigation.ui.tripprogress.api.MapboxTripProgressApi
-import com.mapbox.navigation.ui.tripprogress.model.DistanceRemainingFormatter
-import com.mapbox.navigation.ui.tripprogress.model.EstimatedTimeToArrivalFormatter
-import com.mapbox.navigation.ui.tripprogress.model.PercentDistanceTraveledFormatter
-import com.mapbox.navigation.ui.tripprogress.model.TimeRemainingFormatter
-import com.mapbox.navigation.ui.tripprogress.model.TripProgressUpdateFormatter
-import com.mapbox.navigation.ui.tripprogress.view.MapboxTripProgressView
-import com.mapbox.navigation.ui.voice.api.MapboxSpeechApi
-import com.mapbox.navigation.ui.voice.api.MapboxVoiceInstructionsPlayer
-import com.mapbox.navigation.ui.voice.model.SpeechAnnouncement
-import com.mapbox.navigation.ui.voice.model.SpeechError
-import com.mapbox.navigation.ui.voice.model.SpeechValue
-import com.mapbox.navigation.ui.voice.model.SpeechVolume
+import com.homee.mapboxnavigation.databinding.NavigationViewBinding
+import com.mapbox.navigation.ui.components.base.util.MapboxNavigationConsumer
+import com.mapbox.navigation.tripdata.maneuver.api.MapboxManeuverApi
+import com.mapbox.navigation.ui.components.maneuver.view.MapboxManeuverView
+import com.mapbox.navigation.ui.components.maps.NavigationStyles
+import com.mapbox.navigation.ui.components.maps.camera.NavigationCamera
+import com.mapbox.navigation.ui.components.maps.camera.data.MapboxNavigationViewportDataSource
+import com.mapbox.navigation.ui.components.maps.camera.lifecycle.NavigationBasicGesturesHandler
+import com.mapbox.navigation.ui.components.maps.camera.state.NavigationCameraState
+import com.mapbox.navigation.ui.components.maps.camera.transition.NavigationCameraTransitionOptions
+import com.mapbox.navigation.ui.components.maps.location.NavigationLocationProvider
+import com.mapbox.navigation.ui.components.maps.route.arrow.api.MapboxRouteArrowApi
+import com.mapbox.navigation.ui.components.maps.route.arrow.api.MapboxRouteArrowView
+import com.mapbox.navigation.ui.components.maps.route.arrow.model.RouteArrowOptions
+import com.mapbox.navigation.ui.components.maps.route.line.api.MapboxRouteLineApi
+import com.mapbox.navigation.ui.components.maps.route.line.api.MapboxRouteLineView
+import com.mapbox.navigation.ui.components.maps.route.line.model.MapboxRouteLineOptions
+import com.mapbox.navigation.ui.components.maps.route.line.model.RouteLine
+import com.mapbox.navigation.ui.components.tripprogress.api.MapboxTripProgressApi
+import com.mapbox.navigation.ui.components.tripprogress.model.DistanceRemainingFormatter
+import com.mapbox.navigation.ui.components.tripprogress.model.EstimatedTimeToArrivalFormatter
+import com.mapbox.navigation.ui.components.tripprogress.model.PercentDistanceTraveledFormatter
+import com.mapbox.navigation.ui.components.tripprogress.model.TimeRemainingFormatter
+import com.mapbox.navigation.ui.components.tripprogress.model.TripProgressUpdateFormatter
+import com.mapbox.navigation.ui.components.tripprogress.view.MapboxTripProgressView
+import com.mapbox.navigation.ui.components.voice.api.MapboxSpeechApi
+import com.mapbox.navigation.ui.components.voice.api.MapboxVoiceInstructionsPlayer
+import com.mapbox.navigation.ui.components.voice.model.SpeechAnnouncement
+import com.mapbox.navigation.ui.components.voice.model.SpeechError
+import com.mapbox.navigation.ui.components.voice.model.SpeechValue
+import com.mapbox.navigation.ui.components.voice.model.SpeechVolume
 import java.util.Locale
 import com.facebook.react.uimanager.events.RCTEventEmitter
+import java.util.Date
 
 class MapboxNavigationView(private val context: ThemedReactContext, private val accessToken: String?) :
     FrameLayout(context.baseContext) {
@@ -87,57 +93,25 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private var origin: Point? = null
+    private var waypoints: List<Point>? = null
     private var destination: Point? = null
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
-    /**
-     * Debug tool used to play, pause and seek route progress events that can be used to produce mocked location updates along the route.
-     */
+    private var maxHeight: Double? = null
+    private var maxWidth: Double? = null
+
     private val mapboxReplayer = MapboxReplayer()
-
-    /**
-     * Debug tool that mocks location updates with an input from the [mapboxReplayer].
-     */
     private val replayLocationEngine = ReplayLocationEngine(mapboxReplayer)
-
-    /**
-     * Debug observer that makes sure the replayer has always an up-to-date information to generate mock updates.
-     */
     private val replayProgressObserver = ReplayProgressObserver(mapboxReplayer)
 
-    /**
-     * Bindings to the example layout.
-     */
     private var binding: NavigationViewBinding =
         NavigationViewBinding.inflate(LayoutInflater.from(context), this, true)
 
-    /**
-     * Mapbox Maps entry point obtained from the [MapView].
-     * You need to get a new reference to this object whenever the [MapView] is recreated.
-     */
     private lateinit var mapboxMap: MapboxMap
-
-    /**
-     * Mapbox Navigation entry point. There should only be one instance of this object for the app.
-     * You can use [MapboxNavigationProvider] to help create and obtain that instance.
-     */
     private lateinit var mapboxNavigation: MapboxNavigation
-
-    /**
-     * Used to execute camera transitions based on the data generated by the [viewportDataSource].
-     * This includes transitions from route overview to route following and continuously updating the camera as the location changes.
-     */
     private lateinit var navigationCamera: NavigationCamera
-
-    /**
-     * Produces the camera frames based on the location and routing data for the [navigationCamera] to execute.
-     */
     private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
 
-    /*
-     * Below are generated camera padding values to ensure that the route fits well on screen while
-     * other elements are overlaid on top of the map (including instruction view, buttons, etc.)
-     */
     private val pixelDensity = Resources.getSystem().displayMetrics.density
     private val overviewPadding: EdgeInsets by lazy {
         EdgeInsets(
@@ -172,40 +146,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         )
     }
 
-    /**
-     * Generates updates for the [MapboxManeuverView] to display the upcoming maneuver instructions
-     * and remaining distance to the maneuver point.
-     */
     private lateinit var maneuverApi: MapboxManeuverApi
-
-    /**
-     * Generates updates for the [MapboxTripProgressView] that include remaining time and distance to the destination.
-     */
     private lateinit var tripProgressApi: MapboxTripProgressApi
-
-    /**
-     * Generates updates for the [routeLineView] with the geometries and properties of the routes that should be drawn on the map.
-     */
     private lateinit var routeLineApi: MapboxRouteLineApi
-
-    /**
-     * Draws route lines on the map based on the data from the [routeLineApi]
-     */
     private lateinit var routeLineView: MapboxRouteLineView
-
-    /**
-     * Generates updates for the [routeArrowView] with the geometries and properties of maneuver arrows that should be drawn on the map.
-     */
     private val routeArrowApi: MapboxRouteArrowApi = MapboxRouteArrowApi()
-
-    /**
-     * Draws maneuver arrows on the map based on the data [routeArrowApi].
-     */
     private lateinit var routeArrowView: MapboxRouteArrowView
 
-    /**
-     * Stores and updates the state of whether the voice instructions should be played as they come or muted.
-     */
     private var isVoiceInstructionsMuted = false
         set(value) {
             field = value
@@ -218,41 +165,23 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             }
         }
 
-    /**
-     * Extracts message that should be communicated to the driver about the upcoming maneuver.
-     * When possible, downloads a synthesized audio file that can be played back to the driver.
-     */
     private lateinit var speechApi: MapboxSpeechApi
-
-    /**
-     * Plays the synthesized audio files with upcoming maneuver instructions
-     * or uses an on-device Text-To-Speech engine to communicate the message to the driver.
-     */
     private lateinit var voiceInstructionsPlayer: MapboxVoiceInstructionsPlayer
 
-    /**
-     * Observes when a new voice instruction should be played.
-     */
     private val voiceInstructionsObserver = VoiceInstructionsObserver { voiceInstructions ->
         speechApi.generate(voiceInstructions, speechCallback)
     }
 
-    /**
-     * Based on whether the synthesized audio file is available, the callback plays the file
-     * or uses the fall back which is played back using the on-device Text-To-Speech engine.
-     */
     private val speechCallback =
         MapboxNavigationConsumer<Expected<SpeechError, SpeechValue>> { expected ->
             expected.fold(
                 { error ->
-                    // play the instruction via fallback text-to-speech engine
                     voiceInstructionsPlayer.play(
                         error.fallback,
                         voiceInstructionsPlayerCallback
                     )
                 },
                 { value ->
-                    // play the sound file from the external generator
                     voiceInstructionsPlayer.play(
                         value.announcement,
                         voiceInstructionsPlayerCallback
@@ -261,43 +190,38 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             )
         }
 
-    /**
-     * When a synthesized audio file was downloaded, this callback cleans up the disk after it was played.
-     */
     private val voiceInstructionsPlayerCallback =
         MapboxNavigationConsumer<SpeechAnnouncement> { value ->
-            // remove already consumed file to free-up space
             speechApi.clean(value)
         }
 
-    /**
-     * [NavigationLocationProvider] is a utility class that helps to provide location updates generated by the Navigation SDK
-     * to the Maps SDK in order to update the user location indicator on the map.
-     */
     private val navigationLocationProvider = NavigationLocationProvider()
 
-    /**
-     * Gets notified with location updates.
-     *
-     * Exposes raw updates coming directly from the location services
-     * and the updates enhanced by the Navigation SDK (cleaned up and matched to the road).
-     */
     private val locationObserver = object : LocationObserver {
+        var firstLocationUpdateReceived = false
+
         override fun onNewRawLocation(rawLocation: Location) {
             // not handled
         }
 
         override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
             val enhancedLocation = locationMatcherResult.enhancedLocation
-            // update location puck's position on the map
             navigationLocationProvider.changePosition(
                 location = enhancedLocation,
                 keyPoints = locationMatcherResult.keyPoints,
             )
 
-            // update camera position to account for new location
             viewportDataSource.onLocationChanged(enhancedLocation)
             viewportDataSource.evaluate()
+
+            if (!firstLocationUpdateReceived) {
+                firstLocationUpdateReceived = true
+                navigationCamera.requestNavigationCameraToOverview(
+                    stateTransitionOptions = NavigationCameraTransitionOptions.Builder()
+                        .maxDuration(0)
+                        .build()
+                )
+            }
 
             val event = Arguments.createMap()
             event.putDouble("longitude", enhancedLocation.longitude)
@@ -308,22 +232,16 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         }
     }
 
-    /**
-     * Gets notified with progress along the currently active route.
-     */
     private val routeProgressObserver = RouteProgressObserver { routeProgress ->
-        // update the camera position to account for the progressed fragment of the route
         viewportDataSource.onRouteProgressChanged(routeProgress)
         viewportDataSource.evaluate()
 
-        // draw the upcoming maneuver arrow on the map
         val style = mapboxMap.getStyle()
         if (style != null) {
             val maneuverArrowResult = routeArrowApi.addUpcomingManeuverArrow(routeProgress)
             routeArrowView.renderManeuverUpdate(style, maneuverArrowResult)
         }
 
-        // update top banner with maneuver instructions
         val maneuvers = maneuverApi.getManeuvers(routeProgress)
         maneuvers.fold(
             { error ->
@@ -335,15 +253,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             },
             {
                 binding.maneuverView.visibility = View.VISIBLE
-                binding.maneuverView.updatePrimaryManeuverTextAppearance(R.style.PrimaryManeuverTextAppearance)
-                binding.maneuverView.updateSecondaryManeuverTextAppearance(R.style.ManeuverTextAppearance)
-                binding.maneuverView.updateSubManeuverTextAppearance(R.style.ManeuverTextAppearance)
-                binding.maneuverView.updateStepDistanceTextAppearance(R.style.StepDistanceRemainingAppearance)
                 binding.maneuverView.renderManeuvers(maneuvers)
             }
         )
 
-        // update bottom trip progress summary
         binding.tripProgressView.render(
             tripProgressApi.getTripProgress(routeProgress)
         )
@@ -358,68 +271,26 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             .receiveEvent(id, "onRouteProgressChange", event)
     }
 
-    /**
-     * Gets notified whenever the tracked routes change.
-     *
-     * A change can mean:
-     * - routes get changed with [MapboxNavigation.setRoutes]
-     * - routes annotations get refreshed (for example, congestion annotation that indicate the live traffic along the route)
-     * - driver got off route and a reroute was executed
-     */
     private val routesObserver = RoutesObserver { routeUpdateResult ->
-        if (routeUpdateResult.routes.isNotEmpty()) {
-            // generate route geometries asynchronously and render them
-            val routeLines = routeUpdateResult.routes.map { RouteLine(it, null) }
-
-            routeLineApi.setRoutes(
-                routeLines
-            ) { value ->
+        if (routeUpdateResult.navigationRoutes.isNotEmpty()) {
+            routeLineApi.setNavigationRoutes(routeUpdateResult.navigationRoutes) { value ->
                 mapboxMap.getStyle()?.apply {
                     routeLineView.renderRouteDrawData(this, value)
                 }
             }
-
-            // update the camera position to account for the new route
-            viewportDataSource.onRouteChanged(routeUpdateResult.routes.first())
+            viewportDataSource.onRouteChanged(routeUpdateResult.navigationRoutes.first())
             viewportDataSource.evaluate()
         } else {
-            // remove the route line and route arrow from the map
-            val style = mapboxMap.getStyle()
-            if (style != null) {
+            mapboxMap.getStyle()?.let { style ->
                 routeLineApi.clearRouteLine { value ->
-                    routeLineView.renderClearRouteLineValue(
-                        style,
-                        value
-                    )
+                    routeLineView.renderClearRouteLineValue(style, value)
                 }
                 routeArrowView.render(style, routeArrowApi.clearArrows())
             }
-
-            // remove the route reference from camera position evaluations
             viewportDataSource.clearRouteData()
             viewportDataSource.evaluate()
         }
     }
-
-    private val arrivalObserver = object : ArrivalObserver {
-
-        override fun onWaypointArrival(routeProgress: RouteProgress) {
-            // do something when the user arrives at a waypoint
-        }
-
-        override fun onNextRouteLegStart(routeLegProgress: RouteLegProgress) {
-            // do something when the user starts a new leg
-        }
-
-        override fun onFinalDestinationArrival(routeProgress: RouteProgress) {
-            val event = Arguments.createMap()
-            event.putString("onArrive", "")
-            context
-                .getJSModule(RCTEventEmitter::class.java)
-                .receiveEvent(id, "onRouteProgressChange", event)
-        }
-    }
-
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -445,7 +316,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         navigationCamera.requestNavigationCameraToFollowing(
             stateTransitionOptions = NavigationCameraTransitionOptions.Builder()
-                .maxDuration(0) // instant transition
+                .maxDuration(0)
                 .build()
         )
     }
@@ -464,7 +335,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         mapboxMap = binding.mapView.getMapboxMap()
 
-        // initialize the location puck
         binding.mapView.location.apply {
             this.locationPuck = LocationPuck2D(
                 bearingImage = ContextCompat.getDrawable(
@@ -476,25 +346,19 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             enabled = true
         }
 
-        // initialize Mapbox Navigation
-        mapboxNavigation = if (MapboxNavigationProvider.isCreated()) {
-            MapboxNavigationProvider.retrieve()
-        } else if (shouldSimulateRoute) {
-            MapboxNavigationProvider.create(
-                NavigationOptions.Builder(context)
-                    .accessToken(accessToken)
-                    .locationEngine(replayLocationEngine)
-                    .build()
-            )
-        } else {
-            MapboxNavigationProvider.create(
-                NavigationOptions.Builder(context)
-                    .accessToken(accessToken)
-                    .build()
-            )
+        mapboxNavigation = MapboxNavigation(
+            NavigationOptions.Builder(context)
+                .accessToken(accessToken)
+                .locationEngine(if (shouldSimulateRoute) replayLocationEngine else LocationEngineProvider.getBestLocationEngine(context))
+                .build()
+        ).apply {
+            registerRoutesObserver(routesObserver)
+            registerLocationObserver(locationObserver)
+            registerRouteProgressObserver(routeProgressObserver)
+            registerVoiceInstructionsObserver(voiceInstructionsObserver)
+            startTripSession()
         }
 
-        // initialize Navigation Camera
         viewportDataSource = MapboxNavigationViewportDataSource(mapboxMap)
 
         navigationCamera = NavigationCamera(
@@ -502,13 +366,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             binding.mapView.camera,
             viewportDataSource
         )
-        // set the animations lifecycle listener to ensure the NavigationCamera stops
-        // automatically following the user location when the map is interacted with
         binding.mapView.camera.addCameraAnimationsLifecycleListener(
             NavigationBasicGesturesHandler(navigationCamera)
         )
         navigationCamera.registerNavigationCameraStateChangeObserver { navigationCameraState ->
-            // shows/hide the recenter button depending on the camera state
             when (navigationCameraState) {
                 NavigationCameraState.TRANSITION_TO_FOLLOWING,
                 NavigationCameraState.FOLLOWING -> binding.recenter.visibility = View.INVISIBLE
@@ -517,7 +378,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 NavigationCameraState.IDLE -> binding.recenter.visibility = View.VISIBLE
             }
         }
-        // set the padding values depending on screen orientation and visible view layout
         if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             viewportDataSource.overviewPadding = landscapeOverviewPadding
         } else {
@@ -529,15 +389,12 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             viewportDataSource.followingPadding = followingPadding
         }
 
-        // make sure to use the same DistanceFormatterOptions across different features
-        val distanceFormatterOptions = mapboxNavigation.navigationOptions.distanceFormatterOptions
+        val distanceFormatterOptions = DistanceFormatterOptions.Builder(context).build()
 
-        // initialize maneuver api that feeds the data to the top banner maneuver view
         maneuverApi = MapboxManeuverApi(
             MapboxDistanceFormatter(distanceFormatterOptions)
         )
 
-        // initialize bottom progress view
         tripProgressApi = MapboxTripProgressApi(
             TripProgressUpdateFormatter.Builder(context)
                 .distanceRemainingFormatter(
@@ -555,7 +412,6 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 .build()
         )
 
-        // initialize voice instructions api and the voice instruction player
         speechApi = MapboxSpeechApi(
             context,
             accessToken,
@@ -567,34 +423,20 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             Locale.US.language
         )
 
-        // initialize route line, the withRouteLineBelowLayerId is specified to place
-        // the route line below road labels layer on the map
-        // the value of this option will depend on the style that you are using
-        // and under which layer the route line should be placed on the map layers stack
         val mapboxRouteLineOptions = MapboxRouteLineOptions.Builder(context)
-            .withRouteLineBelowLayerId("road-label")
+            .withRouteLineBelowLayerId("road-label-navigation")
             .build()
         routeLineApi = MapboxRouteLineApi(mapboxRouteLineOptions)
         routeLineView = MapboxRouteLineView(mapboxRouteLineOptions)
 
-        // initialize maneuver arrow view to draw arrows on the map
         val routeArrowOptions = RouteArrowOptions.Builder(context).build()
         routeArrowView = MapboxRouteArrowView(routeArrowOptions)
 
         setCameraPositionToOrigin()
-        // load map style
-        mapboxMap.loadStyleUri(
-            Style.MAPBOX_STREETS
-        )
 
-        // initialize view interactions
+        mapboxMap.loadStyleUri(NavigationStyles.NAVIGATION_DAY_STYLE)
         binding.stop.setOnClickListener {
-//            clearRouteAndStopNavigation() // TODO: figure out how we want to address this since a user cannot reinitialize a route once it is canceled.
-            val event = Arguments.createMap()
-            event.putString("onCancelNavigation", "Navigation Closed")
-            context
-                .getJSModule(RCTEventEmitter::class.java)
-                .receiveEvent(id, "onCancelNavigation", event)
+            clearRouteAndStopNavigation()
         }
         binding.recenter.setOnClickListener {
             navigationCamera.requestNavigationCameraToFollowing()
@@ -605,29 +447,27 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             binding.recenter.showTextAndExtend(BUTTON_ANIMATION_DURATION)
         }
         binding.soundButton.setOnClickListener {
-            // mute/unmute voice instructions
             isVoiceInstructionsMuted = !isVoiceInstructionsMuted
         }
 
-        // set initial sounds button state
         binding.soundButton.unmute()
-
-        // start the trip session to being receiving location updates in free drive
-        // and later when a route is set also receiving route progress updates
-        mapboxNavigation.startTripSession()
         startRoute()
     }
 
     private fun startRoute() {
-        // register event listeners
         mapboxNavigation.registerRoutesObserver(routesObserver)
-        mapboxNavigation.registerArrivalObserver(arrivalObserver)
+        // mapboxNavigation.registerArrivalObserver(arrivalObserver)
         mapboxNavigation.registerRouteProgressObserver(routeProgressObserver)
         mapboxNavigation.registerLocationObserver(locationObserver)
         mapboxNavigation.registerVoiceInstructionsObserver(voiceInstructionsObserver)
         mapboxNavigation.registerRouteProgressObserver(replayProgressObserver)
 
-        this.origin?.let { this.destination?.let { it1 -> this.findRoute(it, it1) } }
+        val coordinatesList = mutableListOf<Point>()
+        this.origin?.let { coordinatesList.add(it) }
+        this.waypoints?.let { coordinatesList.addAll(it) }
+        this.destination?.let { coordinatesList.add(it) }
+
+        findRoute(coordinatesList)
     }
 
     override fun onDetachedFromWindow() {
@@ -640,7 +480,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
     private fun onDestroy() {
-        MapboxNavigationProvider.destroy()
+        mapboxNavigation.onDestroy()
         mapboxReplayer.finish()
         maneuverApi.cancel()
         routeLineApi.cancel()
@@ -649,19 +489,40 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         voiceInstructionsPlayer.shutdown()
     }
 
-    private fun findRoute(origin: Point, destination: Point) {
+    private fun findRoute(coordinates: List<Point>) {
         try {
+            val originLocation = navigationLocationProvider.lastLocation
+            val originPoint = originLocation?.let {
+                Point.fromLngLat(it.longitude, it.latitude)
+            } ?: return
+
+            val routeOptionsBuilder = RouteOptions.builder()
+                .applyDefaultNavigationOptions()
+                .applyLanguageAndVoiceUnitOptions(context)
+                .coordinatesList(coordinates)
+                .profile(DirectionsCriteria.PROFILE_DRIVING_TRAFFIC)
+                .steps(true)
+                .bearingsList(
+                    listOf(
+                        Bearing.builder()
+                            .angle(originLocation.bearing.toDouble())
+                            .degrees(45.0)
+                            .build(),
+                        null
+                    )
+                )
+                .layersList(listOf(mapboxNavigation.getZLevel(), null))
+
+            maxHeight?.let { routeOptionsBuilder.maxHeight(it) }
+            maxWidth?.let { routeOptionsBuilder.maxWidth(it) }
+
+            val routeOptions = routeOptionsBuilder.build()
+
             mapboxNavigation.requestRoutes(
-                RouteOptions.builder()
-                    .applyDefaultNavigationOptions()
-                    .applyLanguageAndVoiceUnitOptions(context)
-                    .coordinatesList(listOf(origin, destination))
-                    .profile(DirectionsCriteria.PROFILE_DRIVING)
-                    .steps(true)
-                    .build(),
-                object : RouterCallback {
+                routeOptions,
+                object : NavigationRouterCallback {
                     override fun onRoutesReady(
-                        routes: List<DirectionsRoute>,
+                        routes: List<NavigationRoute>,
                         routerOrigin: RouterOrigin
                     ) {
                         setRouteAndStartNavigation(routes)
@@ -693,53 +554,46 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             .receiveEvent(id, "onError", event)
     }
 
-    private fun setRouteAndStartNavigation(routes: List<DirectionsRoute>) {
+    private fun setRouteAndStartNavigation(routes: List<NavigationRoute>) {
         if (routes.isEmpty()) {
             sendErrorToReact("No route found")
-            return;
+            return
         }
-        // set routes, where the first route in the list is the primary route that
-        // will be used for active guidance
-        mapboxNavigation.setRoutes(routes)
-
-        // start location simulation along the primary route
+    
+        // Set routes directly as NavigationRoute
+        mapboxNavigation.setNavigationRoutes(routes)
+    
         if (shouldSimulateRoute) {
             startSimulation(routes.first())
         }
-
-        // show UI elements
+    
         binding.soundButton.visibility = View.VISIBLE
         binding.routeOverview.visibility = View.VISIBLE
         binding.tripProgressCard.visibility = View.VISIBLE
-
-        // move the camera to overview when new route is available
-        navigationCamera.requestNavigationCameraToFollowing()
+    
+        navigationCamera.requestNavigationCameraToOverview()
     }
+    
 
     private fun clearRouteAndStopNavigation() {
-        // clear
-        mapboxNavigation.setRoutes(listOf())
-
-        // stop simulation
+        mapboxNavigation.setNavigationRoutes(listOf())
         mapboxReplayer.stop()
-
-        // hide UI elements
         binding.soundButton.visibility = View.INVISIBLE
         binding.maneuverView.visibility = View.INVISIBLE
         binding.routeOverview.visibility = View.INVISIBLE
         binding.tripProgressCard.visibility = View.INVISIBLE
     }
 
-    private fun startSimulation(route: DirectionsRoute) {
+    private fun startSimulation(route: NavigationRoute) {
         mapboxReplayer.run {
             stop()
             clearEvents()
-            val replayEvents = ReplayRouteMapper().mapDirectionsRouteGeometry(route)
+            val replayEvents = ReplayRouteMapper().mapDirectionsRouteGeometry(route.directionsRoute)
             pushEvents(replayEvents)
             seekTo(replayEvents.first())
             play()
         }
-    }
+    }    
 
     fun onDropViewInstance() {
         this.onDestroy()
@@ -747,6 +601,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setOrigin(origin: Point?) {
         this.origin = origin
+    }
+
+    fun setWaypoints(waypoints: List<Point>) {
+        this.waypoints = waypoints
     }
 
     fun setDestination(destination: Point?) {
@@ -763,5 +621,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setMute(mute: Boolean) {
         this.isVoiceInstructionsMuted = mute
+    }
+
+    fun setMaxHeight(maxHeight: Double?) {
+        this.maxHeight = maxHeight
+    }
+
+    fun setMaxWidth(maxWidth: Double?) {
+        this.maxWidth = maxWidth
     }
 }

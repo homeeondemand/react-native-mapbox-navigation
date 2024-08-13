@@ -295,6 +295,11 @@ Array that contains the longitude and latitude for the starting point.<br>
 Array that contains the longitude and latitude for the destination point.<br>
 `[$longitude, $latitude]`
 
+#### `waypoints`
+
+Array that contains arrays of longitude and latitude for the waypoints (limit 25 as per the MapBox restrictions).<br>
+`[[$longitude, $latitude], [$longitude, $latitude]]`
+
 #### `shouldSimulateRoute`
 
 Boolean that controls route simulation. Set this as `true` to auto navigate which is useful for testing or demo purposes. Defaults to `false`.
@@ -310,6 +315,18 @@ Boolean that toggles voice instructions. Defaults to `false`.
 #### `hideStatusView`
 
 Boolean that controls showing the `StatusView` (iOS only). This is the transparent black bar with the "Simulating Navigation" text shown in the above screenshot. Defaults to `false`.
+
+#### `vehicleMaxWidth`
+
+Number that sets max width (in meters) of the vehicle. Defaults to `1.6`.
+
+#### `vehicleMaxHeight`
+
+Number that sets max height (in meters) of the vehicle. Defaults to `1.9`.
+
+#### `mute`
+
+Boolean that toggles voice instructions. Defaults to `false`.
 
 #### `onLocationChange`
 
